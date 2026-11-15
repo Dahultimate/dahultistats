@@ -1,0 +1,95 @@
+/* Jetons de design : couleurs (clair + sombre), polices, espacements.
+   `.theme-light` force le thème clair (mise en page des exports PDF / image). */
+
+:root,
+.theme-light {
+  color-scheme: light;
+  --bg: #eef1ed;
+  --surface: #ffffff;
+  --surface-2: #e4e9e3;
+  --ink: #0d1316;
+  --ink-muted: #46525b;
+  --border: #b9c3bc;
+  --focus: #0a58ca;
+
+  --primary: #1f62c4;
+  --primary-ink: #ffffff;
+  --accent: #ffd23f;
+  --accent-ink: #1d1600;
+  --danger: #c22a2a;
+  --danger-ink: #ffffff;
+  --success: #1c7a37;
+  --warning: #c75113;
+  --neutral: #6b7680;
+  --gold: #b88a00;
+  --gold-bg: #fff4cc;
+
+  /* Séries des graphiques (lisibles par les daltoniens). */
+  --c-us: #2a78d6;
+  --c-them: #eb6834;
+  --c-miss: #e34948;
+  --grid: #d5dbd6;
+  --heat-zero: #e6e9e7;
+
+  /* Terrain de saisie. */
+  --field: #3e8a48;
+  --field-endzone: #2b6a34;
+  --field-line: #ffffff;
+  --field-disabled-opacity: 0.55;
+
+  /* Bandeaux de phase. */
+  --phase-neutral: #5b6670;
+  --phase-attack: #1f62c4;
+  --phase-defense: #c75113;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0c1114;
+    --surface: #161e23;
+    --surface-2: #1f2a31;
+    --ink: #f3f6f8;
+    --ink-muted: #b3bec6;
+    --border: #3a4852;
+    --focus: #8ab8ff;
+
+    --primary: #2b6fd0;
+    --primary-ink: #ffffff;
+    --accent: #ffd23f;
+    --accent-ink: #1d1600;
+    --danger: #c93a3a;
+    --danger-ink: #ffffff;
+    --success: #23864a;
+    --warning: #c4561a;
+    --neutral: #8a96a0;
+    --gold: #f0c43a;
+    --gold-bg: #3a3112;
+
+    --c-us: #3987e5;
+    --c-them: #d95926;
+    --c-miss: #e66767;
+    --grid: #2c3840;
+    --heat-zero: #27323a;
+
+    --field: #2f6f39;
+    --field-endzone: #1f5228;
+
+    --phase-neutral: #4b5660;
+    --phase-attack: #2b6fd0;
+    --phase-defense: #b4500f;
+  }
+}
+
+:root {
+  --font-text: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-title: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius: 10px;
+  --touch: 44px;
+  --header-height: 56px;
+}
