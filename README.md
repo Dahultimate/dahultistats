@@ -10,9 +10,9 @@ Dahultimate, Annecy).
 2. **Effectif** : ajoutez les joueurs (prénom, nom, numéro, poste). **Équipes** : regroupez-les.
 3. **Nouveau match** : date, équipe, adversaire, évènement, terrain, type → « Commencer le match ».
 4. Avant chaque point, touchez les joueurs sur le terrain, puis « Démarrer le point ».
-5. Pendant le point, une action = une ou deux touches : une zone du terrain et un joueur, dans l’ordre que vous voulez.
-6. En attaque : passe = zone + receveur ; une réception dans l’en-but adverse est un but. Bouton **TURN** pour une perte de disque.
-7. En défense : choisissez ce qui se passe (contre, but adverse…), joueurs et zone facultatifs.
+5. Pendant le point, une action = une ou deux touches : l’endroit sur le terrain et un joueur, dans l’ordre que vous voulez.
+6. En attaque : passe = endroit + receveur (les passes s’affichent en flèches sur le terrain) ; une réception dans l’en-but adverse est un but. Bouton **TURN** pour une perte de disque.
+7. En défense : choisissez ce qui se passe (contre, but adverse…), joueurs et endroit facultatifs.
 8. « ↶ Annuler la dernière action » corrige toute erreur, à tout moment.
 9. « Terminer le match » ouvre le rapport : rapport collectif, individuel, point par point, export PDF / image.
 10. **Exportez le fichier JSON** (bouton jaune « Exporter ») après chaque séance : seul ce fichier fait foi.
@@ -84,19 +84,24 @@ que les fichiers exportés par l’ancienne version se relisent sans perte.
   partir des évènements.
 - L’import est tolérant (valeurs par défaut, entrées sans `id` ou évènements sans `t` ignorés) et
   conserve les champs inconnus.
+- L’endroit d’une action est enregistré dans `position: { "x": …, "y": … }`, toujours dans le sens
+  de notre attaque : `x` va de 0 (fond de notre en-but) à 1 (fond de l’en-but adverse), `y` de 0
+  (gauche) à 1 (droite). Un pull sorti du terrain porte `"brick": true` et pas de position.
+- Les fichiers plus anciens enregistraient une zone (`"zone": "M2-C"`) : à l’import, elle est
+  convertie en position au centre de la zone, et le champ `zone` est conservé tel quel.
 - L’export écrit `stats-ultimate-AAAA-MM-JJ.json`, indenté de 2 espaces, avec le champ `exporteLe`.
 
 ## Organisation du code
 
-| Dossier           | Contenu                                                                                                                                                                                             |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/domain/`     | TypeScript pur, sans Vue ni navigateur : types, zones, machine à états du point, statistiques, possessions, indices, import / export, données d’exemple, pagination des exports. Entièrement testé. |
-| `src/services/`   | Accès au navigateur : fichiers, téléchargement, presse-papiers, copie de secours, PDF / PNG.                                                                                                        |
-| `src/stores/`     | État de l’application (Pinia) : données, saisie en direct, filtres, messages.                                                                                                                       |
-| `src/components/` | Affichage : terrain, carte de chaleur, graphiques, rapports, export.                                                                                                                                |
-| `src/views/`      | Une vue par écran (12 vues).                                                                                                                                                                        |
-| `src/i18n/fr.ts`  | Tous les textes de l’interface.                                                                                                                                                                     |
-| `tests/`          | `unit/` (Vitest) et `e2e/` (Playwright).                                                                                                                                                            |
+| Dossier           | Contenu                                                                                                                                                                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/domain/`     | TypeScript pur, sans Vue ni navigateur : types, zones et positions, machine à états du point, carte de chaleur, statistiques, possessions, indices, import / export, données d’exemple, pagination des exports. Entièrement testé. |
+| `src/services/`   | Accès au navigateur : fichiers, téléchargement, presse-papiers, copie de secours, PDF / PNG.                                                                                                                                       |
+| `src/stores/`     | État de l’application (Pinia) : données, saisie en direct, filtres, messages.                                                                                                                                                      |
+| `src/components/` | Affichage : terrain, carte de chaleur, graphiques, rapports, export.                                                                                                                                                               |
+| `src/views/`      | Une vue par écran (12 vues).                                                                                                                                                                                                       |
+| `src/i18n/fr.ts`  | Tous les textes de l’interface.                                                                                                                                                                                                    |
+| `tests/`          | `unit/` (Vitest) et `e2e/` (Playwright).                                                                                                                                                                                           |
 
 Les pondérations des indices (apport offensif, défensif, MVP) sont dans
 [`src/domain/constants.ts`](src/domain/constants.ts).
@@ -107,7 +112,12 @@ La spécification laisse quelques points ouverts ; voici les choix retenus (les 
 
 **Saisie**
 
-- Après une récupération saisie sans zone, la reprise est présélectionnée en `M1-C`, comme après un brick.
+- On touche l’endroit exact de l’action sur le terrain ; au clavier, les flèches déplacent un repère
+  et Entrée valide. Le journal nomme l’endroit par sa zone (« Milieu droite »).
+- Le circuit de passes affiché sur le terrain est celui de la dernière possession : il repart de
+  zéro à chaque reprise du jeu et reste visible en défense jusqu’à la reprise suivante.
+- Après une récupération saisie sans endroit, la reprise est présélectionnée au centre de `M1-C`,
+  comme après un brick.
 - Le bouton « Partager » n’apparaît que sur un appareil tactile dont le navigateur sait partager
   des fichiers ; sur ordinateur, le fichier est téléchargé directement.
 - Dans le journal, un pull de notre équipe sorti du terrain s’écrit « Pull de #12 Sarah → Brick » ;
@@ -120,7 +130,8 @@ La spécification laisse quelques points ouverts ; voici les choix retenus (les 
   Meilleur défenseur : « Personne » si aucun joueur classé n’a de récupération. Si l’égalité
   persiste après le critère secondaire, le premier joueur rencontré l’emporte.
 - Historique : à date égale, le match créé le plus récemment apparaît en premier.
-- Carte de chaleur : le palier d’une zone est `⌈valeur / maximum × 7⌉` (1 à 7) ; une zone à zéro reste grise.
+- Carte de chaleur : chaque action est étalée sur environ 5 % de la longueur du terrain (noyau
+  gaussien) ; la densité est découpée en 7 paliers de couleur, et les endroits sans action restent gris.
 - Le tableau des joueurs garde ses infobulles, et un dépliant « Explication des colonnes » donne
   les mêmes explications sur téléphone (aucune information n’est accessible seulement au survol).
 - Nos turns sont tracés en rouge (couleur des passes ratées), les buts encaissés en orange.
@@ -135,10 +146,11 @@ La spécification laisse quelques points ouverts ; voici les choix retenus (les 
 
 **Données d’exemple (simulation)**
 
-- La zone d’une récupération est tirée au hasard entre notre en-but et le tiers offensif ; la zone
-  d’un turn est celle du porteur.
+- Chaque position est tirée au hasard à l’intérieur d’une zone de la simulation (par exemple un
+  pull adverse en `D` ou `M1`). L’endroit d’une récupération est tiré entre notre en-but et le
+  tiers offensif ; celui d’un turn est celui du porteur.
 - Un Callahan désigne toujours un joueur, dans l’en-but adverse ; un break sans but désigne un
-  joueur dans 80 % des cas, sans zone.
+  joueur dans 80 % des cas, sans position.
 - Les heures sont calculées à partir de 14 h, heure locale, le jour du match.
 
 **Non fourni**

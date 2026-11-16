@@ -1,17 +1,17 @@
 // Structures des statistiques calculées (équipe et joueurs) et leurs valeurs initiales.
 
-import type { ZoneId } from '../types'
+import type { FieldPosition } from '../types'
 
-/** Compteur par clé (zone, cause…). Une clé absente vaut 0. */
+/** Compteur par clé (cause…). Une clé absente vaut 0. */
 export type Counts<K extends string = string> = Partial<Record<K, number>>
 
-export interface PlayerZones {
-  receptions: Counts<ZoneId>
-  /** Zone du porteur au moment de chaque passe tentée. */
-  throws: Counts<ZoneId>
-  goals: Counts<ZoneId>
-  turns: Counts<ZoneId>
-  recoveries: Counts<ZoneId>
+export interface PlayerSpots {
+  receptions: FieldPosition[]
+  /** Position du porteur au moment de chaque passe tentée. */
+  throws: FieldPosition[]
+  goals: FieldPosition[]
+  turns: FieldPosition[]
+  recoveries: FieldPosition[]
 }
 
 export interface PlayerStats {
@@ -42,7 +42,7 @@ export interface PlayerStats {
   offensiveImpact: number
   defensiveImpact: number
   mvpIndex: number
-  zones: PlayerZones
+  spots: PlayerSpots
 }
 
 export interface TeamStats {
@@ -62,25 +62,25 @@ export interface TeamStats {
   attemptedPasses: number
   turns: number
   turnsByCause: Counts
-  turnsByZone: Counts<ZoneId>
+  turnSpots: FieldPosition[]
   recoveries: number
   recoveriesByCause: Counts
-  recoveriesByZone: Counts<ZoneId>
+  recoverySpots: FieldPosition[]
   blocks: number
   callahans: number
   breaksWithoutGoal: number
   concededByCause: Counts
-  concededByZone: Counts<ZoneId>
-  concededWithoutZone: number
-  goalsByZone: Counts<ZoneId>
-  goalsWithoutZone: number
-  receptionsByZone: Counts<ZoneId>
+  concededSpots: FieldPosition[]
+  concededWithoutSpot: number
+  goalSpots: FieldPosition[]
+  goalsWithoutSpot: number
+  receptionSpots: FieldPosition[]
   ourPulls: number
   ourBricks: number
   theirPulls: number
   theirBricks: number
-  ourPullZones: Counts<ZoneId>
-  theirPullZones: Counts<ZoneId>
+  ourPullSpots: FieldPosition[]
+  theirPullSpots: FieldPosition[]
   opponentPasses: number
 }
 
@@ -93,6 +93,11 @@ export interface Stats {
 export function addCount<K extends string>(counts: Counts<K>, key: K | null): void {
   if (key === null) return
   counts[key] = (counts[key] ?? 0) + 1
+}
+
+/** Ajoute une position ; une action sans position n'apparaît sur aucune carte. */
+export function addSpot(spots: FieldPosition[], position: FieldPosition | null | undefined): void {
+  if (position) spots.push(position)
 }
 
 export function sumCounts(counts: Counts): number {
@@ -128,7 +133,7 @@ export function createPlayerStats(playerId: string): PlayerStats {
     offensiveImpact: 0,
     defensiveImpact: 0,
     mvpIndex: 0,
-    zones: { receptions: {}, throws: {}, goals: {}, turns: {}, recoveries: {} },
+    spots: { receptions: [], throws: [], goals: [], turns: [], recoveries: [] },
   }
 }
 
@@ -150,25 +155,25 @@ export function createTeamStats(): TeamStats {
     attemptedPasses: 0,
     turns: 0,
     turnsByCause: {},
-    turnsByZone: {},
+    turnSpots: [],
     recoveries: 0,
     recoveriesByCause: {},
-    recoveriesByZone: {},
+    recoverySpots: [],
     blocks: 0,
     callahans: 0,
     breaksWithoutGoal: 0,
     concededByCause: {},
-    concededByZone: {},
-    concededWithoutZone: 0,
-    goalsByZone: {},
-    goalsWithoutZone: 0,
-    receptionsByZone: {},
+    concededSpots: [],
+    concededWithoutSpot: 0,
+    goalSpots: [],
+    goalsWithoutSpot: 0,
+    receptionSpots: [],
     ourPulls: 0,
     ourBricks: 0,
     theirPulls: 0,
     theirBricks: 0,
-    ourPullZones: {},
-    theirPullZones: {},
+    ourPullSpots: [],
+    theirPullSpots: [],
     opponentPasses: 0,
   }
 }

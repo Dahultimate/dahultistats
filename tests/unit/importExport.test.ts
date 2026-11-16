@@ -8,6 +8,7 @@ import {
   serializeAppData,
 } from '@/domain/importExport'
 import { createSampleData } from '@/domain/sampleData'
+import { zoneCenter } from '@/domain/zones'
 
 /** Exemple de la section 3 de la spécification (fichier de la version actuelle). */
 const CURRENT_VERSION_FILE = `{
@@ -42,11 +43,45 @@ const CURRENT_VERSION_FILE = `{
 }`
 
 describe('import', () => {
-  it('charge sans perte un fichier de la version actuelle', () => {
+  it('charge sans perte un fichier de l’ancienne version : chaque zone devient une position', () => {
     const result = parseAppData(CURRENT_VERSION_FILE)
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-    expect(result.data).toEqual(JSON.parse(CURRENT_VERSION_FILE))
+    if (!result.ok) throw new Error('import refusé')
+    expect(result.data).toMatchObject(JSON.parse(CURRENT_VERSION_FILE))
+    const events = result.data.matchs[0]!.points[0]!.evenements
+    expect(events.map((event) => (event.t === 'passeAdv' ? null : event.position))).toEqual([
+      zoneCenter('D-C'),
+      zoneCenter('D-C'),
+      zoneCenter('A-R'),
+    ])
+  })
+
+  it('positions : gardées si valides, ignorées sinon ; ancienne zone « brick »', () => {
+    const file = {
+      joueurs: [],
+      equipes: [],
+      matchs: [
+        {
+          id: 'm_1',
+          points: [
+            {
+              ligne: [],
+              evenements: [
+                { t: 'pull', equipe: 'eux', zone: 'brick' },
+                { t: 'reprise', joueur: 'j', position: { x: 0.2, y: 0.7 } },
+                { t: 'passe', de: 'j', a: 'k', position: { x: 2, y: 'a' } },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+    const result = parseAppData(JSON.stringify(file))
+    if (!result.ok) throw new Error('import refusé')
+    expect(result.data.matchs[0]!.points[0]!.evenements).toEqual([
+      { t: 'pull', equipe: 'eux', zone: 'brick', brick: true },
+      { t: 'reprise', joueur: 'j', position: { x: 0.2, y: 0.7 } },
+      { t: 'passe', de: 'j', a: 'k' },
+    ])
   })
 
   it('JSON invalide', () => {
@@ -94,7 +129,7 @@ describe('import', () => {
     expect(point).toMatchObject({ resultat: null, attaqueDroite: true })
     expect(point.evenements).toEqual([
       { t: 'passeAdv' },
-      { t: 'def', cause: 'contre', joueurs: [], zone: null },
+      { t: 'def', cause: 'contre', joueurs: [] },
     ])
     expect((result.data as unknown as Record<string, unknown>).champInconnu).toBe(42)
   })

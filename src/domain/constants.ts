@@ -119,7 +119,7 @@ export const INDEX_WEIGHTS = {
   defensiveFault: 1,
 } as const
 
-/** Zone de reprise quand la dernière zone est inconnue (brick ou récupération sans zone). */
+/** Reprise présélectionnée au centre de cette zone quand l'endroit est inconnu (brick ou récupération sans position). */
 export const DEFAULT_PICKUP_ZONE = 'M1-C' as const
 
 /** Nombre d'actions affichées dans le journal du point. */

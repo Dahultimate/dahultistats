@@ -56,24 +56,24 @@ const theirName = computed(() => props.match.adversaire)
       />
     </ReportSection>
     <ReportSection :title="fr.reports.passMap">
-      <HeatmapField :counts="team.receptionsByZone" :label="fr.reports.passMap" />
+      <HeatmapField :positions="team.receptionSpots" :label="fr.reports.passMap" />
     </ReportSection>
     <ReportSection :title="fr.reports.goalZones">
       <div class="pair">
         <div class="stack">
           <h4>{{ fr.reports.ourGoals }}</h4>
-          <HeatmapField :counts="team.goalsByZone" :label="fr.reports.ourGoals" size="compact" />
-          <span class="small muted">{{ fr.reports.withoutZone(team.goalsWithoutZone) }}</span>
+          <HeatmapField :positions="team.goalSpots" :label="fr.reports.ourGoals" size="compact" />
+          <span class="small muted">{{ fr.reports.withoutSpot(team.goalsWithoutSpot) }}</span>
         </div>
         <div class="stack">
           <h4>{{ fr.reports.theirGoals }}</h4>
           <HeatmapField
-            :counts="team.concededByZone"
+            :positions="team.concededSpots"
             :label="fr.reports.theirGoals"
             ramp="orange"
             size="compact"
           />
-          <span class="small muted">{{ fr.reports.withoutZone(team.concededWithoutZone) }}</span>
+          <span class="small muted">{{ fr.reports.withoutSpot(team.concededWithoutSpot) }}</span>
         </div>
       </div>
     </ReportSection>

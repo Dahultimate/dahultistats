@@ -5,7 +5,7 @@ import { defineStore } from 'pinia'
 import { computed, reactive, type Ref, ref } from 'vue'
 
 import { CARRIER_FAULT_CAUSES } from '@/domain/constants'
-import { describeEvent } from '@/domain/eventText'
+import { describeEvent, playerLabel } from '@/domain/eventText'
 import { currentPoint, lastPuller } from '@/domain/lineup'
 import {
   appendEvent,
@@ -16,13 +16,12 @@ import {
 import { matchScore, type Score } from '@/domain/score'
 import type {
   DefCause,
+  FieldPosition,
   Match,
   MatchEvent,
   Point,
-  PullZone,
   Side,
   TurnCause,
-  ZoneId,
 } from '@/domain/types'
 import { isOpponentEndzone } from '@/domain/zones'
 
@@ -40,8 +39,8 @@ export type LiveStep =
   | 'defenseChoice'
   | 'defenseDetails'
 
-/** Étapes où le toucher d'une zone est attendu. */
-const ZONE_STEPS: LiveStep[] = [
+/** Étapes où un toucher sur le terrain est attendu. */
+const SPOT_STEPS: LiveStep[] = [
   'pullUs',
   'pullThem',
   'pickup',
@@ -57,7 +56,8 @@ interface Draft {
   turnMode: boolean
   turnCause: TurnCause | null
   defCause: DefCause | null
-  zone: PullZone | null
+  /** Endroit touché sur le terrain, ou « brick » pour un pull sorti. */
+  spot: FieldPosition | 'brick' | null
   player: string | null
   players: string[]
 }
@@ -68,7 +68,7 @@ function emptyDraft(): Draft {
     turnMode: false,
     turnCause: null,
     defCause: null,
-    zone: null,
+    spot: null,
     player: null,
     players: [],
   }
@@ -101,13 +101,20 @@ export const useLiveMatchStore = defineStore('liveMatch', () => {
     return draft.defCause ? 'defenseDetails' : 'defenseChoice'
   })
 
-  const zoneExpected = computed(() => ZONE_STEPS.includes(step.value))
-  /** Zone affichée en jaune : choix du coach, ou zone présélectionnée pour la reprise. */
-  const selectedZone = computed<ZoneId | null>(() => {
-    if (draft.zone && draft.zone !== 'brick') return draft.zone
-    return step.value === 'pickup' ? (state.value?.pickupZone ?? null) : null
+  const spotExpected = computed(() => SPOT_STEPS.includes(step.value))
+  /** Endroit marqué en jaune : choix du coach, ou endroit présélectionné pour la reprise. */
+  const selectedSpot = computed<FieldPosition | null>(() => {
+    if (draft.spot && draft.spot !== 'brick') return draft.spot
+    return step.value === 'pickup' ? (state.value?.pickupPosition ?? null) : null
   })
-  const goalPending = computed(() => step.value === 'pass' && isOpponentEndzone(selectedZone.value))
+  const goalPending = computed(() => step.value === 'pass' && isOpponentEndzone(selectedSpot.value))
+  /** Circuit de passes de la dernière possession, avec « #7 Léa » à chaque réception. */
+  const trail = computed(() =>
+    (state.value?.trail ?? []).map((stop) => ({
+      label: playerLabel(dataStore.findPlayer(stop.player)),
+      position: stop.position,
+    })),
+  )
   const opponentPassesThisPoint = computed(
     () => point.value?.evenements.filter((event) => event.t === 'passeAdv').length ?? 0,
   )
@@ -187,10 +194,11 @@ export const useLiveMatchStore = defineStore('liveMatch', () => {
     pointNumber,
     state,
     step,
-    zoneExpected,
-    selectedZone,
+    spotExpected,
+    selectedSpot,
     goalPending,
     opponentPassesThisPoint,
+    trail,
     open,
     resetDraft,
     recordEvent,
@@ -211,53 +219,55 @@ interface LiveContext {
   recordEvent: (event: NewEvent) => void
 }
 
-/** Touches du coach : règle d'ordre libre (zone et joueur dans n'importe quel ordre). */
+/** Touches du coach : règle d'ordre libre (endroit et joueur dans n'importe quel ordre). */
 function useLiveInput(draft: Draft, live: LiveContext) {
   function tryRecordPull(): void {
-    if (draft.zone === null) return
-    if (draft.pullTeam === 'eux') live.recordEvent({ t: 'pull', equipe: 'eux', zone: draft.zone })
+    if (draft.spot === null) return
+    const landing = draft.spot === 'brick' ? { brick: true } : { position: draft.spot }
+    if (draft.pullTeam === 'eux') live.recordEvent({ t: 'pull', equipe: 'eux', ...landing })
     else if (draft.player) {
-      live.recordEvent({ t: 'pull', equipe: 'nous', joueur: draft.player, zone: draft.zone })
+      live.recordEvent({ t: 'pull', equipe: 'nous', joueur: draft.player, ...landing })
     }
   }
 
   function tryRecordPass(): void {
     const carrier = live.state.value?.carrier
-    if (!draft.player || !draft.zone || draft.zone === 'brick' || !carrier) return
-    const zone = draft.zone
+    if (!draft.player || !draft.spot || draft.spot === 'brick' || !carrier) return
+    const position = draft.spot
     live.recordEvent({
       t: 'passe',
       de: carrier,
       a: draft.player,
-      zone,
-      ...(isOpponentEndzone(zone) ? { but: true } : {}),
+      position,
+      ...(isOpponentEndzone(position) ? { but: true } : {}),
     })
   }
 
-  function selectZone(zone: PullZone): void {
+  function selectSpot(spot: FieldPosition | 'brick'): void {
     const step = live.step.value
     const carrier = live.state.value?.carrier ?? null
     if (step === 'pullUs' || step === 'pullThem') {
-      draft.zone = zone
+      draft.spot = spot
       return tryRecordPull()
     }
-    if (zone === 'brick') return
-    if (step === 'pickup') draft.zone = zone
+    if (spot === 'brick') return
+    if (step === 'pickup') draft.spot = spot
     if (step === 'pass') {
-      draft.zone = zone
+      draft.spot = spot
       return tryRecordPass()
     }
+    const joueurs = [...draft.players]
     if (step === 'turnDetails' && draft.turnCause) {
       live.recordEvent({
         t: 'turn',
         cause: draft.turnCause,
-        joueurs: [...draft.players],
-        zone,
+        joueurs,
+        position: spot,
         porteur: carrier,
       })
     }
     if (step === 'defenseDetails' && draft.defCause) {
-      live.recordEvent({ t: 'def', cause: draft.defCause, joueurs: [...draft.players], zone })
+      live.recordEvent({ t: 'def', cause: draft.defCause, joueurs, position: spot })
     }
   }
 
@@ -268,8 +278,9 @@ function useLiveInput(draft: Draft, live: LiveContext) {
       return tryRecordPull()
     }
     if (step === 'pickup') {
-      const zone = draft.zone && draft.zone !== 'brick' ? draft.zone : live.state.value?.pickupZone
-      if (zone) live.recordEvent({ t: 'reprise', joueur: id, zone })
+      const position =
+        draft.spot && draft.spot !== 'brick' ? draft.spot : live.state.value?.pickupPosition
+      live.recordEvent({ t: 'reprise', joueur: id, position })
       return
     }
     if (step === 'pass') {
@@ -292,7 +303,7 @@ function useLiveInput(draft: Draft, live: LiveContext) {
 
   function startTurn(): void {
     draft.turnMode = true
-    draft.zone = null
+    draft.spot = null
     draft.player = null
   }
 
@@ -307,9 +318,9 @@ function useLiveInput(draft: Draft, live: LiveContext) {
     draft.players = []
   }
 
-  function validateDefenseWithoutZone(): void {
+  function validateDefenseWithoutSpot(): void {
     if (draft.defCause)
-      live.recordEvent({ t: 'def', cause: draft.defCause, joueurs: [...draft.players], zone: null })
+      live.recordEvent({ t: 'def', cause: draft.defCause, joueurs: [...draft.players] })
   }
 
   function recordOpponentPass(): void {
@@ -318,7 +329,7 @@ function useLiveInput(draft: Draft, live: LiveContext) {
 
   /** « Retour » : annule la sous-étape en cours sans toucher aux évènements. */
   function back(): void {
-    draft.zone = null
+    draft.spot = null
     draft.player = null
     draft.players = []
     if (draft.defCause) draft.defCause = null
@@ -328,13 +339,13 @@ function useLiveInput(draft: Draft, live: LiveContext) {
   }
 
   return {
-    selectZone,
+    selectSpot,
     selectPlayer,
     choosePullTeam,
     startTurn,
     chooseTurnCause,
     chooseDefCause,
-    validateDefenseWithoutZone,
+    validateDefenseWithoutSpot,
     recordOpponentPass,
     back,
   }

@@ -1,9 +1,11 @@
 // Import tolérant et export du fichier JSON « ultimate-stats ».
 // Les champs inconnus sont conservés tels quels : un fichier de la version actuelle se relit sans perte.
+// Les anciens fichiers enregistraient une zone : elle est convertie en position (centre de la zone).
 
 import { toIsoDate } from './format'
 import type {
   AppData,
+  FieldPosition,
   FieldType,
   Match,
   MatchEvent,
@@ -14,6 +16,7 @@ import type {
   Side,
   Team,
 } from './types'
+import { isZoneId, zoneCenter } from './zones'
 
 export type ImportError = 'invalid_json' | 'invalid_format'
 export type ImportResult = { ok: true; data: AppData } | { ok: false; error: ImportError }
@@ -62,11 +65,28 @@ function normalizeTeam(raw: RawObject & { id: string }): Team {
   return { ...raw, id: raw.id, nom: text(raw.nom), joueurs: idList(raw.joueurs) }
 }
 
+function isFraction(value: unknown): value is number {
+  return typeof value === 'number' && value >= 0 && value <= 1
+}
+
+/** Position valide (x et y entre 0 et 1), sinon centre de la zone d'un ancien fichier, sinon aucune. */
+function normalizePosition(event: RawObject): FieldPosition | undefined {
+  const { position, zone } = event
+  if (isObject(position) && isFraction(position.x) && isFraction(position.y)) {
+    return { x: position.x, y: position.y }
+  }
+  return isZoneId(zone) ? zoneCenter(zone) : undefined
+}
+
 function normalizeEvent(raw: RawObject): MatchEvent {
   const event = { ...raw } as RawObject
   if (event.t === 'turn' || event.t === 'def') event.joueurs = idList(event.joueurs)
   if (event.t === 'turn') event.porteur = typeof event.porteur === 'string' ? event.porteur : null
-  if (event.t === 'def') event.zone = typeof event.zone === 'string' ? event.zone : null
+  const position = normalizePosition(event)
+  if (position) event.position = position
+  else delete event.position
+  // Anciens fichiers : la zone « brick » signalait un pull sorti du terrain (la zone reste dans le fichier).
+  if (event.t === 'pull' && event.zone === 'brick') event.brick = true
   return event as unknown as MatchEvent
 }
 

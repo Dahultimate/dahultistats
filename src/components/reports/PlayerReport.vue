@@ -48,13 +48,13 @@ const tiles = computed(() => {
 })
 
 const heatmaps = computed(() => {
-  const zones = props.stats.zones
+  const spots = props.stats.spots
   return [
-    { key: 'receptions', label: fr.heatmap.receptions, counts: zones.receptions },
-    { key: 'throws', label: fr.heatmap.throws, counts: zones.throws },
-    { key: 'goals', label: fr.heatmap.goals, counts: zones.goals },
-    { key: 'turns', label: fr.heatmap.turns, counts: zones.turns, ramp: 'orange' as const },
-    { key: 'recoveries', label: fr.heatmap.recoveries, counts: zones.recoveries },
+    { key: 'receptions', label: fr.heatmap.receptions, positions: spots.receptions },
+    { key: 'throws', label: fr.heatmap.throws, positions: spots.throws },
+    { key: 'goals', label: fr.heatmap.goals, positions: spots.goals },
+    { key: 'turns', label: fr.heatmap.turns, positions: spots.turns, ramp: 'orange' as const },
+    { key: 'recoveries', label: fr.heatmap.recoveries, positions: spots.recoveries },
   ]
 })
 </script>

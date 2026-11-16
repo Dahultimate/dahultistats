@@ -62,21 +62,21 @@ const tiles = computed(() => {
 const heatmaps = computed(() => {
   const t = team.value
   return [
-    { key: 'receptions', label: fr.heatmap.receptions, counts: t.receptionsByZone },
-    { key: 'goals', label: fr.heatmap.goalsScored, counts: t.goalsByZone },
-    { key: 'turns', label: fr.heatmap.ourTurns, counts: t.turnsByZone, ramp: 'orange' as const },
-    { key: 'recoveries', label: fr.heatmap.recoveries, counts: t.recoveriesByZone },
+    { key: 'receptions', label: fr.heatmap.receptions, positions: t.receptionSpots },
+    { key: 'goals', label: fr.heatmap.goalsScored, positions: t.goalSpots },
+    { key: 'turns', label: fr.heatmap.ourTurns, positions: t.turnSpots, ramp: 'orange' as const },
+    { key: 'recoveries', label: fr.heatmap.recoveries, positions: t.recoverySpots },
     {
       key: 'conceded',
       label: fr.heatmap.conceded,
-      counts: t.concededByZone,
+      positions: t.concededSpots,
       ramp: 'orange' as const,
     },
-    { key: 'ourPulls', label: fr.heatmap.ourPulls, counts: t.ourPullZones },
+    { key: 'ourPulls', label: fr.heatmap.ourPulls, positions: t.ourPullSpots },
     {
       key: 'theirPulls',
       label: fr.heatmap.theirPulls,
-      counts: t.theirPullZones,
+      positions: t.theirPullSpots,
       ramp: 'orange' as const,
     },
   ]

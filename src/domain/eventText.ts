@@ -2,7 +2,7 @@
 
 import { DEF_CAUSE_LABELS, isConcededCause, isRecoveryCause, TURN_CAUSE_LABELS } from './constants'
 import type { DefCause, MatchEvent, Player, TurnCause } from './types'
-import { zoneName } from './zones'
+import { positionName } from './zones'
 
 export type PlayerLookup = (id: string) => Player | undefined
 
@@ -35,28 +35,26 @@ export function describeFailedPasses(counts: Partial<Record<string, number>>): s
 export function describeEvent(event: MatchEvent, findPlayer: PlayerLookup): string {
   const label = (id: string) => playerLabel(findPlayer(id))
   const names = (ids: string[]) => ids.map(label).join(', ')
+  const where = positionName(event.t === 'passeAdv' ? undefined : event.position)
   switch (event.t) {
-    case 'pull':
-      if (event.equipe === 'eux') return `Pull adverse → ${zoneName(event.zone)}`
-      return `Pull${event.joueur ? ` de ${label(event.joueur)}` : ''} → ${zoneName(event.zone)}`
+    case 'pull': {
+      const landing = event.brick ? 'Brick' : where
+      if (event.equipe === 'eux') return `Pull adverse → ${landing}`
+      return `Pull${event.joueur ? ` de ${label(event.joueur)}` : ''} → ${landing}`
+    }
     case 'reprise':
-      return `${label(event.joueur)} ramasse le disque · ${zoneName(event.zone)}`
+      return joinParts([`${label(event.joueur)} ramasse le disque`, where])
     case 'passe':
       if (event.but) return `BUT de ${label(event.a)} · passe décisive de ${label(event.de)}`
-      return `Passe ${label(event.de)} → ${label(event.a)} · ${zoneName(event.zone)}`
+      return joinParts([`Passe ${label(event.de)} → ${label(event.a)}`, where])
     case 'turn':
-      return joinParts([
-        'TURN',
-        TURN_CAUSE_LABELS[event.cause],
-        names(event.joueurs),
-        zoneName(event.zone),
-      ])
+      return joinParts(['TURN', TURN_CAUSE_LABELS[event.cause], names(event.joueurs), where])
     case 'def':
       return joinParts([
         defPrefix(event.cause),
         DEF_CAUSE_LABELS[event.cause],
         names(event.joueurs),
-        zoneName(event.zone),
+        where,
       ])
     case 'passeAdv':
       return 'Passe adverse'

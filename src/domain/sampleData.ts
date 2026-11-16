@@ -8,6 +8,7 @@ import { matchScore } from './score'
 import type {
   AppData,
   ConcededCause,
+  FieldPosition,
   FieldType,
   Lane,
   Match,
@@ -21,9 +22,8 @@ import type {
   Side,
   Team,
   TurnCause,
-  ZoneId,
 } from './types'
-import { LANES, rankOf, RANKS, zoneId } from './zones'
+import { LANES, rankOf, RANKS, zoneAt, zoneBounds, zoneCenter, zoneId } from './zones'
 
 export const SAMPLE_SEED = 20261114
 
@@ -97,8 +97,10 @@ class Random {
     return result
   }
 
-  zone(ranks: readonly Rank[]): ZoneId {
-    return zoneId(this.pick(ranks), this.pick<Lane>(LANES))
+  /** Endroit tiré au hasard dans une zone d'un des rangs donnés. */
+  position(ranks: readonly Rank[]): FieldPosition {
+    const { x0, x1, y0, y1 } = zoneBounds(zoneId(this.pick(ranks), this.pick<Lane>(LANES)))
+    return { x: x0 + this.next() * (x1 - x0), y: y0 + this.next() * (y1 - y0) }
   }
 }
 
@@ -182,7 +184,7 @@ const RANK_STEP_WEIGHTS: [number, number][] = [
   [0, 2],
   [1, 3],
 ]
-/** La spécification ne fixe pas la zone d'une récupération simulée : on la tire entre D et M3. */
+/** La spécification ne fixe pas l'endroit d'une récupération simulée : on le tire entre D et M3. */
 const RECOVERY_RANKS: Rank[] = ['D', 'M1', 'M2', 'M3']
 
 /** Simulation d'un point : état courant, horloge et enregistrement via appendEvent. */
@@ -218,11 +220,11 @@ function simulatePull(sim: PointSimulation, puller: Side): void {
   const { random } = sim
   const brick = random.chance(SIM.brickChance)
   if (puller === 'nous') {
-    const zone = brick ? 'brick' : random.zone(['M3', 'A'])
-    sim.record({ t: 'pull', equipe: 'nous', joueur: sim.line[0], zone }, 60, 100)
+    const landing = brick ? { brick: true } : { position: random.position(['M3', 'A']) }
+    sim.record({ t: 'pull', equipe: 'nous', joueur: sim.line[0], ...landing }, 60, 100)
   } else {
-    const zone = brick ? 'brick' : random.zone(['M1', 'D'])
-    sim.record({ t: 'pull', equipe: 'eux', zone }, 60, 100)
+    const landing = brick ? { brick: true } : { position: random.position(['M1', 'D']) }
+    sim.record({ t: 'pull', equipe: 'eux', ...landing }, 60, 100)
   }
 }
 
@@ -230,33 +232,38 @@ function simulatePickup(sim: PointSimulation, state: PointState): void {
   const last = sim.point.evenements.at(-1)
   const designated = last?.t === 'def' ? last.joueurs[0] : undefined
   const joueur = designated ?? sim.random.pick(sim.line)
-  sim.record({ t: 'reprise', joueur, zone: state.pickupZone }, 3, 6)
+  sim.record({ t: 'reprise', joueur, position: state.pickupPosition }, 3, 6)
 }
 
-function simulateTurn(sim: PointSimulation, carrier: string, zone: ZoneId): void {
+function simulateTurn(sim: PointSimulation, carrier: string, position: FieldPosition): void {
   const { random } = sim
-  const deep = ['D', 'M1'].includes(rankOf(zone))
+  const deep = ['D', 'M1'].includes(rankOf(zoneAt(position)))
   const cause = random.weighted<TurnCause>(
     deep ? [...TURN_WEIGHTS, ['callahan', 0.4]] : TURN_WEIGHTS,
   )
   const receiver = sim.teammateOf(carrier)
   const fautif = cause === 'drop' || cause === 'duel_perdu' ? receiver : carrier
-  sim.record({ t: 'turn', cause, joueurs: [fautif], zone, porteur: carrier }, 3, 6)
+  sim.record({ t: 'turn', cause, joueurs: [fautif], position, porteur: carrier }, 3, 6)
 }
 
 function simulateAttack(sim: PointSimulation, state: PointState): void {
   const { random } = sim
   const carrier = state.carrier ?? sim.random.pick(sim.line)
-  const zone = state.carrierZone ?? zoneId('M2', 'C')
-  if (random.chance(SIM.turnChance)) return simulateTurn(sim, carrier, zone)
+  const position = state.carrierPosition ?? zoneCenter('M2-C')
+  const rank = rankOf(zoneAt(position))
+  if (random.chance(SIM.turnChance)) return simulateTurn(sim, carrier, position)
   const receiver = sim.teammateOf(carrier)
-  if (rankOf(zone) === 'M3' && random.chance(SIM.goalChanceFromM3)) {
-    sim.record({ t: 'passe', de: carrier, a: receiver, zone: random.zone(['A']), but: true }, 3, 8)
+  if (rank === 'M3' && random.chance(SIM.goalChanceFromM3)) {
+    sim.record(
+      { t: 'passe', de: carrier, a: receiver, position: random.position(['A']), but: true },
+      3,
+      8,
+    )
     return
   }
-  const rankIndex = RANKS.indexOf(rankOf(zone)) + random.weighted(RANK_STEP_WEIGHTS)
+  const rankIndex = RANKS.indexOf(rank) + random.weighted(RANK_STEP_WEIGHTS)
   const nextRank = RANKS[Math.min(3, Math.max(1, rankIndex))] as Rank
-  sim.record({ t: 'passe', de: carrier, a: receiver, zone: random.zone([nextRank]) }, 3, 8)
+  sim.record({ t: 'passe', de: carrier, a: receiver, position: random.position([nextRank]) }, 3, 8)
 }
 
 function simulateDefense(sim: PointSimulation): void {
@@ -268,20 +275,28 @@ function simulateDefense(sim: PointSimulation): void {
       const cause = random.weighted(RECOVERY_WEIGHTS)
       const joueurs =
         cause === 'contre' ? [random.pick(sim.line)] : someone(SIM.designatedRecoveryChance)
-      return sim.record({ t: 'def', cause, joueurs, zone: random.zone(RECOVERY_RANKS) }, 3, 6)
+      return sim.record(
+        { t: 'def', cause, joueurs, position: random.position(RECOVERY_RANKS) },
+        3,
+        6,
+      )
     }
     case 'callahan': {
       const joueurs = [random.pick(sim.line)]
-      return sim.record({ t: 'def', cause: 'callahan', joueurs, zone: random.zone(['A']) }, 3, 6)
+      return sim.record(
+        { t: 'def', cause: 'callahan', joueurs, position: random.position(['A']) },
+        3,
+        6,
+      )
     }
     case 'breakWithoutGoal': {
       const joueurs = someone(SIM.designatedConcededChance)
-      return sim.record({ t: 'def', cause: 'break_sans_but', joueurs, zone: null }, 3, 6)
+      return sim.record({ t: 'def', cause: 'break_sans_but', joueurs }, 3, 6)
     }
     case 'conceded': {
       const cause = random.weighted(CONCEDED_WEIGHTS)
       const joueurs = someone(SIM.designatedConcededChance)
-      return sim.record({ t: 'def', cause, joueurs, zone: random.zone(['D', 'M1']) }, 3, 6)
+      return sim.record({ t: 'def', cause, joueurs, position: random.position(['D', 'M1']) }, 3, 6)
     }
     case 'opponentPass':
       return sim.record({ t: 'passeAdv' }, 3, 7)
@@ -292,7 +307,7 @@ function simulatePoint(sim: PointSimulation, puller: Side): Point {
   simulatePull(sim, puller)
   while (sim.point.resultat === null) {
     if (sim.actions >= SIM.maxActionsPerPoint) {
-      sim.record({ t: 'def', cause: 'autre_but', joueurs: [], zone: 'D-C' }, 3, 6)
+      sim.record({ t: 'def', cause: 'autre_but', joueurs: [], position: zoneCenter('D-C') }, 3, 6)
       break
     }
     const state = derivePointState(sim.point.evenements)

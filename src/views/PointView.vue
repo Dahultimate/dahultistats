@@ -52,7 +52,6 @@ const carrier = computed(() =>
   live.state?.carrier ? dataStore.findPlayer(live.state.carrier) : undefined,
 )
 const phase = computed(() => live.state?.phase ?? 'engagement')
-
 const banner = computed(() => {
   if (phase.value === 'engagement')
     return { text: fr.live.phaseEngagement(live.pointNumber), tone: 'neutral' }
@@ -83,7 +82,7 @@ const canGoBack = computed(() => {
     d.pullTeam !== null ||
     d.turnMode ||
     d.defCause !== null ||
-    d.zone !== null ||
+    d.spot !== null ||
     (live.step === 'pass' && d.player !== null)
   )
 })
@@ -122,12 +121,12 @@ async function undo(): Promise<void> {
         :attack-right="live.point.attaqueDroite"
         :our-name="live.match.equipeNom"
         :their-name="live.match.adversaire"
-        :selected-zone="live.selectedZone"
-        :carrier-zone="phase === 'attaque' ? (live.state?.carrierZone ?? null) : null"
-        :carrier-number="carrier?.numero ?? null"
-        :disabled="!live.zoneExpected"
+        :selected="live.selectedSpot"
+        :trail="live.trail"
+        :carrier-active="phase === 'attaque'"
+        :disabled="!live.spotExpected"
         :attacking="phase === 'attaque' || phase === 'reprise'"
-        @select="live.selectZone"
+        @select="live.selectSpot"
       />
       <LiveActionPanel
         :line-players="linePlayers"

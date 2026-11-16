@@ -5,6 +5,9 @@ import { readFile } from 'node:fs/promises'
 
 import { type Download, expect, type Page, test } from '@playwright/test'
 
+import type { ZoneId } from '../../src/domain/types'
+import { zoneCenter } from '../../src/domain/zones'
+
 const PLAYERS: [string, string, string, 'Handler' | 'Middle'][] = [
   ['Léa', 'Martin', '7', 'Handler'],
   ['Hugo', 'Bernard', '3', 'Handler'],
@@ -21,10 +24,18 @@ function today(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
-const zone = (page: Page, name: string) =>
-  page
-    .getByRole('group', { name: 'Terrain : touchez une zone' })
-    .getByRole('button', { name: new RegExp(`^${name}`) })
+const field = (page: Page) => page.getByRole('button', { name: /^Terrain/ })
+
+/** Touche le terrain au centre d'une zone ; vers la gauche, l'écran est le terrain tourné de 180°. */
+async function tapZone(page: Page, zone: ZoneId, attackRight: boolean): Promise<void> {
+  const box = await field(page).boundingBox()
+  if (!box) throw new Error('Terrain introuvable')
+  const { x, y } = zoneCenter(zone)
+  const left = attackRight ? x : 1 - x
+  const top = attackRight ? y : 1 - y
+  await field(page).click({ position: { x: left * box.width, y: top * box.height } })
+}
+
 const linePlayer = (page: Page, number: string) =>
   page
     .getByRole('group', { name: 'Joueurs de la ligne' })
@@ -82,13 +93,16 @@ async function playOffensePoint(page: Page): Promise<void> {
     PLAYERS.map((player) => player[2]),
   )
   await button(page, /ils lancent/).click()
-  await zone(page, 'Notre en-but centre').click()
+  await tapZone(page, 'D-C', true)
   await linePlayer(page, '7').click()
   await expect(page.getByText('Attaque · disque : #7 Léa')).toBeVisible()
-  // Passe simple en deux touches : zone puis receveur.
-  await zone(page, 'Milieu droite').click()
+  // Passe simple en deux touches : endroit puis receveur.
+  await tapZone(page, 'M2-R', true)
   await linePlayer(page, '9').click()
-  await zone(page, 'En-but adverse centre').click()
+  // Le circuit de passes s'affiche sur le terrain : chaque receveur, relié par une flèche.
+  await expect(field(page).getByText('#7 Léa')).toBeVisible()
+  await expect(field(page).getByText('#9 Lucas')).toBeVisible()
+  await tapZone(page, 'A-C', true)
   await expect(page.getByText('BUT pour Open ! Qui a attrapé le disque ?')).toBeVisible()
   await linePlayer(page, '12').click()
   await expect(page.getByRole('heading', { name: 'Point 2' })).toBeVisible()
@@ -99,14 +113,14 @@ async function playDefensePoint(page: Page): Promise<void> {
   await startLine(page, 'same')
   await button(page, /nous lançons/).click()
   await linePlayer(page, '3').click()
-  await zone(page, 'Tiers offensif centre').click()
+  await tapZone(page, 'M3-C', false)
   await button(page, 'Contre / interception').click()
   await linePlayer(page, '5').click()
-  await zone(page, 'Milieu centre').click()
+  await tapZone(page, 'M2-C', false)
   await linePlayer(page, '5').click()
   await button(page, 'TURN').click()
   await button(page, 'Drop').click()
-  await zone(page, 'Tiers offensif gauche').click()
+  await tapZone(page, 'M3-L', false)
   await button(page, 'Marquage individuel').click()
   await button(page, 'Valider sans joueur fautif').click()
   await expect(page.getByRole('heading', { name: 'Point 3' })).toBeVisible()
@@ -116,7 +130,7 @@ async function playDefensePoint(page: Page): Promise<void> {
 async function undoAndReopen(page: Page): Promise<void> {
   await startLine(page, 'same')
   await button(page, /ils lancent/).click()
-  await zone(page, 'Notre en-but gauche').click()
+  await tapZone(page, 'D-L', true)
   await button(page, '↶ Annuler la dernière action').click()
   await expect(page.getByText('Annulé : Pull adverse → Notre en-but gauche')).toBeVisible()
   await button(page, '↶ Annuler la dernière action').click()

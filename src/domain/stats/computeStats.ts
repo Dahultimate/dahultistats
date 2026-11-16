@@ -9,10 +9,19 @@ import {
 } from '../constants'
 import { INITIAL_POINT_STATE, nextPointState, type PointState, pullingSide } from '../pointState'
 import { matchResult, matchScore } from '../score'
-import type { DefenseEvent, Match, MatchEvent, Point, PullEvent, TurnEvent, ZoneId } from '../types'
+import type {
+  DefenseEvent,
+  FieldPosition,
+  Match,
+  MatchEvent,
+  Point,
+  PullEvent,
+  TurnEvent,
+} from '../types'
 import { defensiveImpact, mvpIndex, offensiveImpact } from './indices'
 import {
   addCount,
+  addSpot,
   createPlayerStats,
   createTeamStats,
   type PlayerStats,
@@ -104,15 +113,15 @@ function accumulateEvent(acc: Accumulator, event: MatchEvent, before: PointState
       const receiver = playerOf(acc, event.a)
       thrower.completedPasses++
       thrower.attemptedPasses++
-      addCount(thrower.zones.throws, before.carrierZone)
+      addSpot(thrower.spots.throws, before.carrierPosition)
       receiver.receptions++
-      addCount(receiver.zones.receptions, event.zone)
-      addCount(acc.team.receptionsByZone, event.zone)
+      addSpot(receiver.spots.receptions, event.position)
+      addSpot(acc.team.receptionSpots, event.position)
       if (!event.but) return
       receiver.goals++
-      addCount(receiver.zones.goals, event.zone)
+      addSpot(receiver.spots.goals, event.position)
       thrower.assists++
-      addGoalZone(acc.team, event.zone)
+      addGoal(acc.team, event.position)
       return
     }
     case 'turn':
@@ -127,17 +136,17 @@ function accumulateEvent(acc: Accumulator, event: MatchEvent, before: PointState
 
 function accumulatePull(acc: Accumulator, event: PullEvent): void {
   const { team } = acc
-  const brick = event.zone === 'brick'
-  const zone = event.zone === 'brick' ? null : event.zone
+  const brick = event.brick === true
+  const { position } = event
   if (event.equipe === 'eux') {
     team.theirPulls++
     if (brick) team.theirBricks++
-    addCount(team.theirPullZones, zone)
+    addSpot(team.theirPullSpots, position)
     return
   }
   team.ourPulls++
   if (brick) team.ourBricks++
-  addCount(team.ourPullZones, zone)
+  addSpot(team.ourPullSpots, position)
   if (!event.joueur) return
   const player = playerOf(acc, event.joueur)
   player.pulls++
@@ -148,39 +157,39 @@ function accumulateTurn(acc: Accumulator, event: TurnEvent, before: PointState):
   const { team } = acc
   team.turns++
   addCount(team.turnsByCause, event.cause)
-  addCount(team.turnsByZone, event.zone)
+  addSpot(team.turnSpots, event.position)
   for (const id of event.joueurs) {
     const player = playerOf(acc, id)
     player.turns++
     addCount(player.turnsByCause, event.cause)
-    addCount(player.zones.turns, event.zone)
+    addSpot(player.spots.turns, event.position)
   }
   if (event.porteur && THROW_TURN_CAUSES.includes(event.cause)) {
     const carrier = playerOf(acc, event.porteur)
     carrier.attemptedPasses++
     addCount(carrier.failedPassesByCause, event.cause)
-    addCount(carrier.zones.throws, before.carrierZone)
+    addSpot(carrier.spots.throws, before.carrierPosition)
   }
-  if (event.cause === 'callahan') addConcededGoal(team, CALLAHAN_CONCEDED, event.zone)
+  if (event.cause === 'callahan') addConcededGoal(team, CALLAHAN_CONCEDED, event.position)
 }
 
 function accumulateDefense(acc: Accumulator, event: DefenseEvent): void {
   const { team } = acc
-  const { cause, zone } = event
+  const { cause, position } = event
   if (isRecoveryCause(cause) || cause === 'callahan') {
     team.recoveries++
     addCount(team.recoveriesByCause, cause)
-    addCount(team.recoveriesByZone, zone)
+    addSpot(team.recoverySpots, position)
     if (cause === 'contre') team.blocks++
     if (cause === 'callahan') {
       team.callahans++
-      addGoalZone(team, zone)
+      addGoal(team, position)
     }
     for (const id of event.joueurs) accumulatePlayerRecovery(playerOf(acc, id), event)
     return
   }
   if (cause === 'break_sans_but') team.breaksWithoutGoal++
-  if (isConcededCause(cause)) addConcededGoal(team, cause, zone)
+  if (isConcededCause(cause)) addConcededGoal(team, cause, position)
   for (const id of event.joueurs) {
     const player = playerOf(acc, id)
     player.defensiveFaults++
@@ -190,24 +199,28 @@ function accumulateDefense(acc: Accumulator, event: DefenseEvent): void {
 
 function accumulatePlayerRecovery(player: PlayerStats, event: DefenseEvent): void {
   player.recoveries++
-  addCount(player.zones.recoveries, event.zone)
+  addSpot(player.spots.recoveries, event.position)
   if (event.cause === 'contre') player.blocks++
   if (event.cause !== 'callahan') return
   player.callahans++
   player.blocks++
   player.goals++
-  addCount(player.zones.goals, event.zone)
+  addSpot(player.spots.goals, event.position)
 }
 
-function addGoalZone(team: TeamStats, zone: ZoneId | null): void {
-  if (zone === null) team.goalsWithoutZone++
-  addCount(team.goalsByZone, zone)
+function addGoal(team: TeamStats, position: FieldPosition | undefined): void {
+  if (!position) team.goalsWithoutSpot++
+  addSpot(team.goalSpots, position)
 }
 
-function addConcededGoal(team: TeamStats, cause: string, zone: ZoneId | null): void {
+function addConcededGoal(
+  team: TeamStats,
+  cause: string,
+  position: FieldPosition | undefined,
+): void {
   addCount(team.concededByCause, cause)
-  if (zone === null) team.concededWithoutZone++
-  addCount(team.concededByZone, zone)
+  if (!position) team.concededWithoutSpot++
+  addSpot(team.concededSpots, position)
 }
 
 function finalizePlayer(player: PlayerStats): void {

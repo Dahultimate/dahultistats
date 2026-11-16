@@ -12,15 +12,19 @@ import { computeStats } from '@/domain/stats/computeStats'
 import { defensiveImpact, mvpIndex, offensiveImpact, roundToTenth } from '@/domain/stats/indices'
 import { findLeaders } from '@/domain/stats/leaders'
 import { pointPossessions, summarizePossessions } from '@/domain/stats/possessions'
-import { createPlayerStats, sumCounts } from '@/domain/stats/statsTypes'
+import { createPlayerStats } from '@/domain/stats/statsTypes'
+import type { FieldPosition } from '@/domain/types'
+import { zoneAt } from '@/domain/zones'
 
-import { handMadeMatch, makeMatch, makePoint } from './fixtures'
+import { at, handMadeMatch, makeMatch, makePoint } from './fixtures'
 
 const match = handMadeMatch()
 const { team, players } = computeStats([match])
 const a = players.a!
 const b = players.b!
 const c = players.c!
+/** Zones des positions enregistrées, triées : les fixtures placent chaque action au centre d'une zone. */
+const zonesOf = (spots: FieldPosition[]) => spots.map(zoneAt).sort()
 
 describe('statistiques d’un joueur', () => {
   it('matchs, points joués O / D, gagnés, perdus, différentiel', () => {
@@ -78,14 +82,14 @@ describe('statistiques d’un joueur', () => {
     expect([a.plusMinus, b.plusMinus, c.plusMinus]).toEqual([2, -1, 2])
   })
 
-  it('zones : lancers, réceptions, buts, turns, récupérations', () => {
-    expect(a.zones.throws).toEqual({ 'D-C': 1, 'M3-R': 1, 'M1-C': 1, 'D-R': 1 })
-    expect(sumCounts(a.zones.throws)).toBe(a.attemptedPasses)
-    expect(c.zones.throws).toEqual({ 'M2-C': 1 })
-    expect(b.zones.receptions).toEqual({ 'M1-L': 1, 'A-C': 1 })
-    expect(c.zones.goals).toEqual({ 'A-R': 1, 'A-L': 1 })
-    expect(b.zones.turns).toEqual({ 'M3-L': 1, 'M1-C': 1 })
-    expect(a.zones.recoveries).toEqual({ 'M3-R': 1 })
+  it('positions : lancers, réceptions, buts, turns, récupérations', () => {
+    expect(zonesOf(a.spots.throws)).toEqual(['D-C', 'D-R', 'M1-C', 'M3-R'])
+    expect(a.spots.throws.length).toBe(a.attemptedPasses)
+    expect(zonesOf(c.spots.throws)).toEqual(['M2-C'])
+    expect(zonesOf(b.spots.receptions)).toEqual(['A-C', 'M1-L'])
+    expect(zonesOf(c.spots.goals)).toEqual(['A-L', 'A-R'])
+    expect(zonesOf(b.spots.turns)).toEqual(['M1-C', 'M3-L'])
+    expect(zonesOf(a.spots.recoveries)).toEqual(['M3-R'])
   })
 })
 
@@ -131,40 +135,40 @@ describe('statistiques de l’équipe', () => {
     expect(team).toMatchObject({ completedPasses: 4, attemptedPasses: 7 })
   })
 
-  it('turns par cause et par zone', () => {
+  it('turns par cause et leurs positions', () => {
     expect(team.turns).toBe(4)
     expect(team.turnsByCause).toEqual({ drop: 1, mauvaise_passe: 1, stall_out: 1, callahan: 1 })
-    expect(team.turnsByZone).toEqual({ 'M3-L': 1, 'M1-C': 1, 'M2-C': 1, 'D-R': 1 })
+    expect(zonesOf(team.turnSpots)).toEqual(['D-R', 'M1-C', 'M2-C', 'M3-L'])
   })
 
-  it('récupérations (Callahans inclus) par type et par zone', () => {
+  it('récupérations (Callahans inclus) par type et leurs positions', () => {
     expect(team).toMatchObject({ recoveries: 3, blocks: 1, callahans: 1 })
     expect(team.recoveriesByCause).toEqual({ contre: 1, callahan: 1, drop_adv: 1 })
-    expect(team.recoveriesByZone).toEqual({ 'M3-R': 1, 'A-L': 1, 'M2-C': 1 })
+    expect(zonesOf(team.recoverySpots)).toEqual(['A-L', 'M2-C', 'M3-R'])
   })
 
   it('breaks subis sans but et buts encaissés par cause, avec Callahan subi', () => {
     expect(team.breaksWithoutGoal).toBe(1)
     expect(team.concededByCause).toEqual({ marquage: 1, autre_but: 1, callahan_subi: 1 })
-    expect(team.concededByZone).toEqual({ 'D-L': 1, 'D-R': 1 })
-    expect(team.concededWithoutZone).toBe(1)
+    expect(zonesOf(team.concededSpots)).toEqual(['D-L', 'D-R'])
+    expect(team.concededWithoutSpot).toBe(1)
   })
 
-  it('zones des buts marqués et des réceptions', () => {
-    expect(team.goalsByZone).toEqual({ 'A-C': 1, 'A-L': 1, 'A-R': 1 })
-    expect(team.goalsWithoutZone).toBe(0)
-    expect(sumCounts(team.receptionsByZone)).toBe(4)
+  it('positions des buts marqués et des réceptions', () => {
+    expect(zonesOf(team.goalSpots)).toEqual(['A-C', 'A-L', 'A-R'])
+    expect(team.goalsWithoutSpot).toBe(0)
+    expect(team.receptionSpots.length).toBe(4)
   })
 
   it('pulls, bricks et passes adverses', () => {
     expect(team).toMatchObject({ ourPulls: 2, ourBricks: 1, theirPulls: 4, theirBricks: 0 })
-    expect(team.ourPullZones).toEqual({ 'A-C': 1 })
-    expect(team.theirPullZones).toEqual({ 'D-C': 1, 'M1-C': 2, 'D-R': 1 })
+    expect(zonesOf(team.ourPullSpots)).toEqual(['A-C'])
+    expect(zonesOf(team.theirPullSpots)).toEqual(['D-C', 'D-R', 'M1-C', 'M1-C'])
     expect(team.opponentPasses).toBe(2)
   })
 
   it('les points en cours ne comptent pas comme points joués', () => {
-    const live = makeMatch([makePoint([{ t: 'pull', equipe: 'eux', zone: 'D-C' }])], {
+    const live = makeMatch([makePoint([{ t: 'pull', equipe: 'eux', position: at('D-C') }])], {
       termine: false,
     })
     const stats = computeStats([live])
@@ -194,9 +198,9 @@ describe('possessions', () => {
 
   it('« — » si une heure manque', () => {
     const point = makePoint([
-      { t: 'pull', equipe: 'eux', zone: 'D-C' },
-      { t: 'reprise', joueur: 'a', zone: 'D-C' },
-      { t: 'passe', de: 'a', a: 'b', zone: 'A-C', but: true },
+      { t: 'pull', equipe: 'eux', position: at('D-C') },
+      { t: 'reprise', joueur: 'a', position: at('D-C') },
+      { t: 'passe', de: 'a', a: 'b', position: at('A-C'), but: true },
     ])
     delete point.evenements[0]!.ts
     expect(summarizePossessions([makeMatch([point])]).ourTimeShare).toBeNull()
@@ -204,8 +208,8 @@ describe('possessions', () => {
 
   it('une possession encore ouverte est ignorée', () => {
     const point = makePoint([
-      { t: 'pull', equipe: 'eux', zone: 'D-C' },
-      { t: 'reprise', joueur: 'a', zone: 'D-C' },
+      { t: 'pull', equipe: 'eux', position: at('D-C') },
+      { t: 'reprise', joueur: 'a', position: at('D-C') },
     ])
     expect(pointPossessions(point)).toEqual([])
   })

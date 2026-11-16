@@ -1,39 +1,71 @@
-// Machine à états d'un point : l'état (phase, porteur, zone du porteur, vainqueur) se déduit
+// Machine à états d'un point : l'état (phase, porteur, position du porteur, vainqueur) se déduit
 // uniquement de la liste des évènements. Annuler revient donc à retirer le dernier évènement.
 
 import { DEFAULT_PICKUP_ZONE, isConcededCause, isRecoveryCause } from './constants'
-import type { MatchEvent, Point, PullZone, Side, ZoneId } from './types'
+import type { FieldPosition, MatchEvent, Point, Side } from './types'
+import { zoneCenter } from './zones'
 
 export type Phase = 'engagement' | 'reprise' | 'attaque' | 'defense' | 'fin'
+
+/** Étape du circuit de passes : joueur qui a eu le disque, et où. */
+export interface TrailStop {
+  player: string
+  position: FieldPosition
+}
 
 export interface PointState {
   phase: Phase
   /** Joueur qui a le disque (en attaque). */
   carrier: string | null
-  carrierZone: ZoneId | null
+  carrierPosition: FieldPosition | null
   winner: Side | null
-  /** Zone présélectionnée pour la reprise du jeu. */
-  pickupZone: ZoneId
+  /** Endroit présélectionné pour la reprise du jeu. */
+  pickupPosition: FieldPosition
+  /** Circuit de la dernière possession : reprise puis chaque réception. */
+  trail: TrailStop[]
 }
+
+const DEFAULT_PICKUP_POSITION = zoneCenter(DEFAULT_PICKUP_ZONE)
 
 export const INITIAL_POINT_STATE: PointState = {
   phase: 'engagement',
   carrier: null,
-  carrierZone: null,
+  carrierPosition: null,
   winner: null,
-  pickupZone: DEFAULT_PICKUP_ZONE,
-}
-
-function pickupZoneFrom(zone: PullZone | null): ZoneId {
-  return zone === null || zone === 'brick' ? DEFAULT_PICKUP_ZONE : zone
+  pickupPosition: DEFAULT_PICKUP_POSITION,
+  trail: [],
 }
 
 function endPoint(state: PointState, winner: Side): PointState {
-  return { ...state, phase: 'fin', winner, carrier: null, carrierZone: null }
+  return { ...state, phase: 'fin', winner, carrier: null, carrierPosition: null }
 }
 
 function toDefense(state: PointState): PointState {
-  return { ...state, phase: 'defense', carrier: null, carrierZone: null }
+  return { ...state, phase: 'defense', carrier: null, carrierPosition: null }
+}
+
+function toPickup(state: PointState, position: FieldPosition | undefined): PointState {
+  return {
+    ...toDefense(state),
+    phase: 'reprise',
+    pickupPosition: position ?? DEFAULT_PICKUP_POSITION,
+  }
+}
+
+function receive(
+  state: PointState,
+  player: string,
+  position: FieldPosition | undefined,
+  trail: TrailStop[],
+) {
+  const stops = position ? [...trail, { player, position }] : trail
+  return {
+    ...state,
+    phase: 'attaque' as const,
+    carrier: player,
+    carrierPosition: position ?? null,
+    trail: stops,
+  }
 }
 
 export function nextPointState(state: PointState, event: MatchEvent): PointState {
@@ -41,20 +73,16 @@ export function nextPointState(state: PointState, event: MatchEvent): PointState
   if (state.phase === 'fin') return state
   switch (event.t) {
     case 'pull':
-      return event.equipe === 'nous'
-        ? toDefense(state)
-        : { ...state, phase: 'reprise', pickupZone: pickupZoneFrom(event.zone) }
+      return event.equipe === 'nous' ? toDefense(state) : toPickup(state, event.position)
     case 'reprise':
-      return { ...state, phase: 'attaque', carrier: event.joueur, carrierZone: event.zone }
+      return receive(state, event.joueur, event.position, [])
     case 'passe':
       if (event.but) return endPoint(state, 'nous')
-      return { ...state, phase: 'attaque', carrier: event.a, carrierZone: event.zone }
+      return receive(state, event.a, event.position, state.trail)
     case 'turn':
       return event.cause === 'callahan' ? endPoint(state, 'eux') : toDefense(state)
     case 'def':
-      if (isRecoveryCause(event.cause)) {
-        return { ...toDefense(state), phase: 'reprise', pickupZone: pickupZoneFrom(event.zone) }
-      }
+      if (isRecoveryCause(event.cause)) return toPickup(state, event.position)
       if (event.cause === 'callahan') return endPoint(state, 'nous')
       if (isConcededCause(event.cause)) return endPoint(state, 'eux')
       return toDefense(state)

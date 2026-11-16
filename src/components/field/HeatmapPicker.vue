@@ -2,8 +2,7 @@
 // Carte du terrain avec un sélecteur de statistique. À l'export, le sélecteur devient un titre.
 import { computed } from 'vue'
 
-import type { Counts } from '@/domain/stats/statsTypes'
-import type { ZoneId } from '@/domain/types'
+import type { FieldPosition } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 
 import HeatmapField from './HeatmapField.vue'
@@ -11,7 +10,7 @@ import HeatmapField from './HeatmapField.vue'
 export interface HeatmapOption {
   key: string
   label: string
-  counts: Counts<ZoneId>
+  positions: FieldPosition[]
   ramp?: 'blue' | 'orange'
 }
 
@@ -34,7 +33,7 @@ const current = computed(
       </select>
     </label>
     <h4 v-else>{{ fr.export.heatmapTitle(current.label) }}</h4>
-    <HeatmapField :counts="current.counts" :label="current.label" :ramp="current.ramp" />
+    <HeatmapField :positions="current.positions" :label="current.label" :ramp="current.ramp" />
   </div>
 </template>
 

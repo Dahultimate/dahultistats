@@ -26,7 +26,7 @@ const passers = computed(() =>
     completed: stats.completedPasses,
     attempted: stats.attemptedPasses,
     missedDetail: describeFailedPasses(stats.failedPassesByCause),
-    throws: stats.zones.throws,
+    throws: stats.spots.throws,
   })),
 )
 </script>
@@ -51,7 +51,7 @@ const passers = computed(() =>
             <span v-if="passer.missedDetail" class="small muted">{{ passer.missedDetail }}</span>
           </figcaption>
           <HeatmapField
-            :counts="passer.throws"
+            :positions="passer.throws"
             :label="`${fr.reports.passMaps} : ${passer.label}`"
             size="mini"
           />

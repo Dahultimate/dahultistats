@@ -1,5 +1,15 @@
 # Journal des modifications
 
+## 1.1.0 — 2026-11-16
+
+- Saisie : le terrain n’est plus découpé en zones, on touche l’endroit exact de l’action ;
+  les coordonnées sont enregistrées (`position: { x, y }`) au lieu de la zone.
+- Saisie : le circuit de passes s’affiche sur le terrain (nom et numéro de chaque receveur,
+  flèches entre les passes, flèche en pointillés vers l’endroit déjà touché).
+- Rapports : les terrains à zones sont remplacés par de vraies cartes de chaleur.
+- Les fichiers enregistrés avec des zones se chargent toujours : chaque zone devient une position
+  au centre de la zone. Les données d’exemple sont simulées avec des positions.
+
 ## 1.0.0 — 2026-11-15
 
 Réécriture complète de Stats Ultimate (Vue 3, TypeScript, Vite, Pinia).

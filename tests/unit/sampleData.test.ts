@@ -55,7 +55,7 @@ describe('données d’exemple', () => {
       const score = matchScore(match)
 
       it('buts de l’équipe = score marqué ; buts encaissés = score encaissé', () => {
-        expect(sumCounts(team.goalsByZone) + team.goalsWithoutZone).toBe(score.us)
+        expect(team.goalSpots.length + team.goalsWithoutSpot).toBe(score.us)
         expect(sumCounts(team.concededByCause)).toBe(score.them)
       })
 
@@ -75,7 +75,7 @@ describe('données d’exemple', () => {
 
       it('somme des zones de lancer d’un joueur = ses passes tentées', () => {
         for (const player of playerList) {
-          expect(sumCounts(player.zones.throws)).toBe(player.attemptedPasses)
+          expect(player.spots.throws.length).toBe(player.attemptedPasses)
         }
       })
 

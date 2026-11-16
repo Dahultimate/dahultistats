@@ -75,7 +75,7 @@ const pullChoices = computed(() => [
       v-if="live.step === 'pullUs' || live.step === 'pullThem'"
       type="button"
       class="btn btn-big"
-      @click="live.selectZone('brick')"
+      @click="live.selectSpot('brick')"
     >
       {{ fr.live.brick }}
     </button>
@@ -112,7 +112,7 @@ const pullChoices = computed(() => [
       v-if="live.step === 'defenseDetails'"
       type="button"
       class="btn btn-big btn-primary"
-      @click="live.validateDefenseWithoutZone"
+      @click="live.validateDefenseWithoutSpot"
     >
       {{ validateLabel }}
     </button>

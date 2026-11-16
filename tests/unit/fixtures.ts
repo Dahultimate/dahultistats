@@ -2,6 +2,10 @@
 
 import { derivePointState } from '@/domain/pointState'
 import type { Match, MatchEvent, Player, Point } from '@/domain/types'
+import { zoneCenter } from '@/domain/zones'
+
+/** Centre d'une zone : position lisible dans les tests. */
+export const at = zoneCenter
 
 type EventWithoutTime = MatchEvent extends infer E
   ? E extends MatchEvent
@@ -47,44 +51,44 @@ export const PLAYERS: Player[] = [
 export function handMadeMatch(): Match {
   return makeMatch([
     makePoint([
-      { t: 'pull', equipe: 'eux', zone: 'D-C' },
-      { t: 'reprise', joueur: 'a', zone: 'D-C' },
-      { t: 'passe', de: 'a', a: 'b', zone: 'M1-L' },
-      { t: 'passe', de: 'b', a: 'c', zone: 'M2-C' },
-      { t: 'turn', cause: 'drop', joueurs: ['b'], zone: 'M3-L', porteur: 'c' },
-      { t: 'def', cause: 'contre', joueurs: ['a'], zone: 'M3-R' },
-      { t: 'reprise', joueur: 'a', zone: 'M3-R' },
-      { t: 'passe', de: 'a', a: 'b', zone: 'A-C', but: true },
+      { t: 'pull', equipe: 'eux', position: at('D-C') },
+      { t: 'reprise', joueur: 'a', position: at('D-C') },
+      { t: 'passe', de: 'a', a: 'b', position: at('M1-L') },
+      { t: 'passe', de: 'b', a: 'c', position: at('M2-C') },
+      { t: 'turn', cause: 'drop', joueurs: ['b'], position: at('M3-L'), porteur: 'c' },
+      { t: 'def', cause: 'contre', joueurs: ['a'], position: at('M3-R') },
+      { t: 'reprise', joueur: 'a', position: at('M3-R') },
+      { t: 'passe', de: 'a', a: 'b', position: at('A-C'), but: true },
     ]),
     makePoint([
-      { t: 'pull', equipe: 'nous', joueur: 'a', zone: 'brick' },
+      { t: 'pull', equipe: 'nous', joueur: 'a', brick: true },
       { t: 'passeAdv' },
       { t: 'passeAdv' },
-      { t: 'def', cause: 'marquage', joueurs: ['b'], zone: 'D-L' },
+      { t: 'def', cause: 'marquage', joueurs: ['b'], position: at('D-L') },
     ]),
     makePoint([
-      { t: 'pull', equipe: 'nous', joueur: 'c', zone: 'A-C' },
-      { t: 'def', cause: 'callahan', joueurs: ['c'], zone: 'A-L' },
+      { t: 'pull', equipe: 'nous', joueur: 'c', position: at('A-C') },
+      { t: 'def', cause: 'callahan', joueurs: ['c'], position: at('A-L') },
     ]),
     makePoint([
-      { t: 'pull', equipe: 'eux', zone: 'M1-C' },
-      { t: 'reprise', joueur: 'b', zone: 'M1-C' },
-      { t: 'turn', cause: 'mauvaise_passe', joueurs: ['b'], zone: 'M1-C', porteur: 'b' },
-      { t: 'def', cause: 'break_sans_but', joueurs: ['a'], zone: null },
-      { t: 'def', cause: 'drop_adv', joueurs: [], zone: 'M2-C' },
-      { t: 'reprise', joueur: 'c', zone: 'M2-C' },
-      { t: 'turn', cause: 'stall_out', joueurs: ['c'], zone: 'M2-C', porteur: 'c' },
-      { t: 'def', cause: 'autre_but', joueurs: [], zone: null },
+      { t: 'pull', equipe: 'eux', position: at('M1-C') },
+      { t: 'reprise', joueur: 'b', position: at('M1-C') },
+      { t: 'turn', cause: 'mauvaise_passe', joueurs: ['b'], position: at('M1-C'), porteur: 'b' },
+      { t: 'def', cause: 'break_sans_but', joueurs: ['a'] },
+      { t: 'def', cause: 'drop_adv', joueurs: [], position: at('M2-C') },
+      { t: 'reprise', joueur: 'c', position: at('M2-C') },
+      { t: 'turn', cause: 'stall_out', joueurs: ['c'], position: at('M2-C'), porteur: 'c' },
+      { t: 'def', cause: 'autre_but', joueurs: [] },
     ]),
     makePoint([
-      { t: 'pull', equipe: 'eux', zone: 'D-R' },
-      { t: 'reprise', joueur: 'a', zone: 'D-R' },
-      { t: 'turn', cause: 'callahan', joueurs: ['a'], zone: 'D-R', porteur: 'a' },
+      { t: 'pull', equipe: 'eux', position: at('D-R') },
+      { t: 'reprise', joueur: 'a', position: at('D-R') },
+      { t: 'turn', cause: 'callahan', joueurs: ['a'], position: at('D-R'), porteur: 'a' },
     ]),
     makePoint([
-      { t: 'pull', equipe: 'eux', zone: 'M1-C' },
-      { t: 'reprise', joueur: 'a', zone: 'M1-C' },
-      { t: 'passe', de: 'a', a: 'c', zone: 'A-R', but: true },
+      { t: 'pull', equipe: 'eux', position: at('M1-C') },
+      { t: 'reprise', joueur: 'a', position: at('M1-C') },
+      { t: 'passe', de: 'a', a: 'c', position: at('A-R'), but: true },
     ]),
   ])
 }

@@ -12,7 +12,15 @@ export type Rank = 'D' | 'M1' | 'M2' | 'M3' | 'A'
 /** Couloir vu par un joueur de notre équipe qui attaque. */
 export type Lane = 'L' | 'C' | 'R'
 export type ZoneId = `${Rank}-${Lane}`
-export type PullZone = ZoneId | 'brick'
+
+/**
+ * Endroit d'une action (clic sur le terrain), toujours dans le sens de NOTRE attaque :
+ * x de 0 (fond de notre en-but) à 1 (fond de l'en-but adverse), y de 0 (gauche) à 1 (droite).
+ */
+export interface FieldPosition {
+  x: number
+  y: number
+}
 
 export type TurnCause = 'mauvaise_passe' | 'drop' | 'duel_perdu' | 'stall_out' | 'callahan'
 export type RecoveryCause =
@@ -39,14 +47,16 @@ export interface PullEvent {
   t: 'pull'
   equipe: Side
   joueur?: string
-  zone: PullZone
+  /** Atterrissage du pull ; absent si le pull sort du terrain (brick). */
+  position?: FieldPosition
+  brick?: boolean
   ts?: number
 }
 
 export interface PickupEvent {
   t: 'reprise'
   joueur: string
-  zone: ZoneId
+  position?: FieldPosition
   ts?: number
 }
 
@@ -54,7 +64,8 @@ export interface PassEvent {
   t: 'passe'
   de: string
   a: string
-  zone: ZoneId
+  /** Endroit de la réception. */
+  position?: FieldPosition
   but?: boolean
   ts?: number
 }
@@ -63,7 +74,7 @@ export interface TurnEvent {
   t: 'turn'
   cause: TurnCause
   joueurs: string[]
-  zone: ZoneId
+  position?: FieldPosition
   porteur: string | null
   ts?: number
 }
@@ -72,7 +83,8 @@ export interface DefenseEvent {
   t: 'def'
   cause: DefCause
   joueurs: string[]
-  zone: ZoneId | null
+  /** Absente si le coach valide sans préciser l'endroit. */
+  position?: FieldPosition
   ts?: number
 }
 
@@ -86,7 +98,7 @@ export type MatchEvent =
 
 export interface Point {
   ligne: string[]
-  /** Sens d'affichage seulement : les zones sont toujours enregistrées dans le sens de notre attaque. */
+  /** Sens d'affichage seulement : les positions sont toujours enregistrées dans le sens de notre attaque. */
   attaqueDroite: boolean
   evenements: MatchEvent[]
   resultat: Side | null
