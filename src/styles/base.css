@@ -58,6 +58,8 @@ a {
   margin: 0 auto;
   padding: var(--space-4);
   display: grid;
+  /* Une colonne qui ne dépasse jamais la largeur de l’écran, quel que soit son contenu. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
@@ -70,6 +72,7 @@ a {
 
 .stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
 }
 

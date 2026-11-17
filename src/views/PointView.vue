@@ -184,12 +184,13 @@ async function undo(): Promise<void> {
 
 .workspace {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
 @media (min-width: 860px) {
   .workspace {
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     align-items: start;
   }
 }

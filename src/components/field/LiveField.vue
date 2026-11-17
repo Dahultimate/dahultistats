@@ -136,6 +136,7 @@ const percent = (value: number) => `${value * 100}%`
 <style scoped>
 .live-field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1);
 }
 

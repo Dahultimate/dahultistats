@@ -41,6 +41,7 @@ const groups: { key: string; title: string; causes: DefCause[] }[] = [
 <style scoped>
 .defense {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
 }
 

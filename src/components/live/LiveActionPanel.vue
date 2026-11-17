@@ -122,6 +122,7 @@ const pullChoices = computed(() => [
 <style scoped>
 .panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   align-content: start;
 }
@@ -150,6 +151,7 @@ const pullChoices = computed(() => [
 
 .causes {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
 }
 </style>
