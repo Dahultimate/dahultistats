@@ -168,7 +168,7 @@ thead th:not(:first-child) {
 .screen th:first-child {
   position: sticky;
   left: 0;
-  background: var(--surface);
+  background: var(--surface-solid);
   z-index: 1;
 }
 

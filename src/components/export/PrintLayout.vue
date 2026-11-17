@@ -42,6 +42,8 @@ defineExpose({ root })
 .print-layout {
   background: #ffffff;
   color: var(--ink);
+  /* Police du thème Classique, quel que soit le thème choisi à l'écran. */
+  font-family: var(--font-text);
   padding: 57px; /* 15 mm à 96 dpi */
   display: grid;
   gap: 16px;

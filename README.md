@@ -153,6 +153,22 @@ La spécification laisse quelques points ouverts ; voici les choix retenus (les 
   joueur dans 80 % des cas, sans position.
 - Les heures sont calculées à partir de 14 h, heure locale, le jour du match.
 
+**Apparence**
+
+- Deux thèmes au choix sur l’accueil (carte « Apparence ») : Classique et Verre liquide (panneaux
+  translucides et floutés sur des halos de couleur, police Figtree). Chacun existe en clair et en sombre.
+- Par défaut, le mode clair / sombre suit l’appareil ; le bouton soleil / lune du bandeau le force.
+  Revenir au mode de l’appareil efface ce choix forcé. Le thème et le mode sont gardés dans ce
+  navigateur (ils ne vont pas dans le fichier JSON).
+- Tout passe par des jetons CSS (`src/styles/tokens.css`) ; la matière du verre est dans
+  `src/styles/glass.css`. Pour ajouter un thème : un nouveau bloc de jetons, son identifiant dans
+  `src/services/themeService.ts` et son nom dans `fr.theme.names` (`src/i18n/fr.ts`).
+- Le verre est moins lisible que le thème Classique en plein soleil (le flou et la transparence
+  réduisent le contraste) : gardez Classique pour le bord de terrain en journée. Le réglage système
+  « réduire la transparence » rend les surfaces opaques.
+- Les exports PDF / image restent toujours dans le thème Classique clair (vérifié : un PNG exporté
+  avec le verre sombre actif est identique, octet pour octet, à celui du thème Classique).
+
 **Non fourni**
 
 - Le fonctionnement hors ligne (service worker, facultatif) n’est pas inclus.

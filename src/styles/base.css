@@ -177,7 +177,8 @@ textarea {
   padding: var(--space-2) var(--space-3);
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface);
+  /* Opaque : la liste native d'un <select> doit rester lisible. */
+  background: var(--surface-solid);
   color: var(--ink);
   font: 1rem var(--font-text);
   width: 100%;

@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## Non publié
+
+- Apparence : choix du thème (Classique ou Verre liquide), chacun en clair et en sombre ; le mode
+  suit l’appareil et se bascule depuis le bandeau. Police Figtree auto-hébergée.
+
 ## 1.1.0 — 2026-11-16
 
 - Saisie : le terrain n’est plus découpé en zones, on touche l’endroit exact de l’action ;

@@ -1,11 +1,26 @@
-/* Jetons de design : couleurs (clair + sombre), polices, espacements.
-   `.theme-light` force le thème clair (mise en page des exports PDF / image). */
+/* Jetons de design : couleurs, polices, formes et matière (verre). Deux thèmes, chacun en clair et en sombre :
+   <html data-theme="base|glass" data-mode="light|dark"> (posés par le store du thème).
+   `.theme-light` force le thème Classique clair (mise en page des exports PDF / image) : il redéclare
+   TOUS les jetons, y compris ceux du verre, pour que rien du thème choisi à l'écran n'y entre. */
 
+/* Classique — clair (valeurs par défaut et neutres pour le verre) */
 :root,
 .theme-light {
   color-scheme: light;
+  --font-text: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-title: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --radius: 10px;
+
+  /* Matière : sans effet dans le thème Classique. */
+  --ambient: none;
+  --glass-blur: none;
+  --glass-shadow: none;
+  --glass-shadow-sm: none;
+
+  /* `--bg` reste une couleur unie (le toast et le tableau de score l'utilisent comme couleur de texte). */
   --bg: #eef1ed;
   --surface: #ffffff;
+  --surface-solid: #ffffff;
   --surface-2: #e4e9e3;
   --ink: #0d1316;
   --ink-muted: #46525b;
@@ -43,53 +58,151 @@
   --phase-defense: #c75113;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #0c1114;
-    --surface: #161e23;
-    --surface-2: #1f2a31;
-    --ink: #f3f6f8;
-    --ink-muted: #b3bec6;
-    --border: #3a4852;
-    --focus: #8ab8ff;
-
-    --primary: #2b6fd0;
-    --primary-ink: #ffffff;
-    --accent: #ffd23f;
-    --accent-ink: #1d1600;
-    --danger: #c93a3a;
-    --danger-ink: #ffffff;
-    --success: #23864a;
-    --warning: #c4561a;
-    --neutral: #8a96a0;
-    --gold: #f0c43a;
-    --gold-bg: #3a3112;
-
-    --c-us: #3987e5;
-    --c-them: #d95926;
-    --c-miss: #e66767;
-    --grid: #2c3840;
-    --heat-zero: #27323a;
-
-    --field: #2f6f39;
-    --field-endzone: #1f5228;
-
-    --phase-neutral: #4b5660;
-    --phase-attack: #2b6fd0;
-    --phase-defense: #b4500f;
-  }
-}
-
 :root {
-  --font-text: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-title: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
-  --radius: 10px;
   --touch: 44px;
   --header-height: 56px;
+}
+
+/* Classique — sombre */
+:root[data-theme='base'][data-mode='dark'] {
+  color-scheme: dark;
+  --bg: #0c1114;
+  --surface: #161e23;
+  --surface-solid: #161e23;
+  --surface-2: #1f2a31;
+  --ink: #f3f6f8;
+  --ink-muted: #b3bec6;
+  --border: #3a4852;
+  --focus: #8ab8ff;
+
+  --primary: #2b6fd0;
+  --accent: #ffd23f;
+  --accent-ink: #1d1600;
+  --danger: #c93a3a;
+  --success: #23864a;
+  --warning: #c4561a;
+  --neutral: #8a96a0;
+  --gold: #f0c43a;
+  --gold-bg: #3a3112;
+
+  --c-us: #3987e5;
+  --c-them: #d95926;
+  --c-miss: #e66767;
+  --grid: #2c3840;
+  --heat-zero: #27323a;
+
+  --field: #2f6f39;
+  --field-endzone: #1f5228;
+
+  --phase-neutral: #4b5660;
+  --phase-attack: #2b6fd0;
+  --phase-defense: #b4500f;
+}
+
+/* Verre liquide — clair : panneaux translucides sur des halos de couleur */
+:root[data-theme='glass'] {
+  color-scheme: light;
+  --font-text: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-title: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 22px;
+
+  --ambient:
+    radial-gradient(520px 520px at 8% 22%, rgb(182 242 58 / 55%), transparent 70%),
+    radial-gradient(560px 560px at 95% 45%, rgb(62 139 255 / 45%), transparent 70%),
+    radial-gradient(480px 480px at 30% 100%, rgb(255 138 76 / 45%), transparent 70%),
+    linear-gradient(165deg, #d8f5e5 0%, #cfe6ff 55%, #ffe6cb 100%);
+  --glass-blur: blur(26px) saturate(180%);
+  --glass-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 95%), inset 0 -1px 0 rgb(255 255 255 / 12%),
+    0 10px 28px rgb(9 40 30 / 20%);
+  --glass-shadow-sm: inset 0 1px 0 rgb(255 255 255 / 90%), 0 4px 12px rgb(9 40 30 / 12%);
+
+  --bg: #d8f5e5;
+  --surface:
+    linear-gradient(135deg, rgb(255 255 255 / 60%), rgb(255 255 255 / 0%) 46%),
+    rgb(255 255 255 / 56%);
+  --surface-solid: #f4fbf7;
+  --surface-2: rgb(255 255 255 / 40%);
+  --ink: #0b2a22;
+  --ink-muted: #2f4f45;
+  --border: rgb(11 42 34 / 26%);
+  --focus: #1f5fe0;
+
+  --primary: #1f5fe0;
+  --primary-ink: #ffffff;
+  --accent: #b6f23a;
+  --accent-ink: #0b2a22;
+  --danger: #c42a12;
+  --danger-ink: #ffffff;
+  --success: #1b7a45;
+  --warning: #b4500f;
+  --neutral: #5a6b64;
+  --gold: #8a6400;
+  --gold-bg: rgb(255 224 102 / 55%);
+
+  --c-us: #1f6bea;
+  --c-them: #e5601f;
+  --c-miss: #d43838;
+  --grid: rgb(11 42 34 / 14%);
+  --heat-zero: rgb(11 42 34 / 10%);
+
+  --field: #1e7a43;
+  --field-endzone: #16603a;
+  --field-line: #ffffff;
+
+  --phase-neutral: #4a5c54;
+  --phase-attack: #1f5fe0;
+  --phase-defense: #b4500f;
+}
+
+/* Verre liquide — sombre */
+:root[data-theme='glass'][data-mode='dark'] {
+  color-scheme: dark;
+
+  --ambient:
+    radial-gradient(520px 520px at 8% 22%, rgb(182 242 58 / 22%), transparent 70%),
+    radial-gradient(560px 560px at 95% 45%, rgb(62 139 255 / 35%), transparent 70%),
+    radial-gradient(480px 480px at 30% 100%, rgb(255 138 76 / 28%), transparent 70%),
+    linear-gradient(165deg, #07201a 0%, #0a2433 55%, #2a1a12 100%);
+  --glass-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 30%), inset 0 -1px 0 rgb(255 255 255 / 6%),
+    0 14px 34px rgb(0 0 0 / 50%);
+  --glass-shadow-sm: inset 0 1px 0 rgb(255 255 255 / 25%), 0 4px 12px rgb(0 0 0 / 35%);
+
+  --bg: #07201a;
+  --surface:
+    linear-gradient(135deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 0%) 46%), rgb(14 34 29 / 60%);
+  --surface-solid: #10261f;
+  --surface-2: rgb(255 255 255 / 8%);
+  --ink: #f2fbf7;
+  --ink-muted: #b7cfc5;
+  --border: rgb(255 255 255 / 30%);
+  --focus: #b6f23a;
+
+  --primary: #2f68ec;
+  --danger: #d2391f;
+  --success: #1f8a4e;
+  --warning: #c4561a;
+  --neutral: #6b7d75;
+  --gold: #f0c43a;
+  --gold-bg: rgb(240 196 58 / 20%);
+
+  --c-us: #6ab2ff;
+  --c-them: #ff8a4c;
+  --c-miss: #ff7a7a;
+  --grid: rgb(255 255 255 / 12%);
+  --heat-zero: rgb(255 255 255 / 7%);
+
+  --field: #1b6e3d;
+  --field-endzone: #124d2b;
+  --field-line: #f2fbf7;
+
+  --phase-neutral: #3a4a43;
+  --phase-attack: #2f68ec;
+  --phase-defense: #b4500f;
 }

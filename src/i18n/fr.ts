@@ -37,6 +37,14 @@ export const fr = {
     required: 'Champ obligatoire',
     noData: 'Aucune donnée pour ces filtres.',
   },
+  theme: {
+    title: 'Apparence',
+    label: 'Thème',
+    names: { base: 'Classique', glass: 'Verre liquide' },
+    hint: 'Clair ou sombre : suit l’appareil par défaut ; le bouton soleil / lune en haut de l’écran bascule.',
+    toLight: 'Passer en mode clair',
+    toDark: 'Passer en mode sombre',
+  },
   header: {
     back: 'Retour à la vue précédente',
     export: 'Exporter',

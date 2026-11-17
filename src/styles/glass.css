@@ -1,0 +1,49 @@
+/* Matière du thème « Verre liquide ». Aucun sélecteur ne dépend du thème choisi : tout passe par les
+   jetons de tokens.css, qui valent `none` dans le thème Classique et dans la mise en page des exports
+   (`.theme-light`). Ne jamais mettre de `backdrop-filter`, `filter` ou `transform` sur `.page`, `main`
+   ou `#app` : ils deviendraient le bloc contenant du rendu hors écran des exports. */
+
+/* Halos de couleur fixes derrière toute l'interface : ce que le verre floute. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--ambient);
+}
+
+/* Panneaux de premier niveau : flou, liseré brillant et ombre. Pas de flou imbriqué dans un panneau
+   (il n'ajoute rien et coûte cher sur téléphone). */
+.card,
+.app-header,
+.dialog,
+.menu-tile {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+
+.btn,
+.chip,
+.tile,
+.segmented {
+  box-shadow: var(--glass-shadow-sm);
+}
+
+/* Sans transparence (réglage du système) : surfaces pleines, sans flou. */
+@media (prefers-reduced-transparency: reduce) {
+  /* Même spécificité que le bloc sombre du verre : celui-ci gagne parce qu'il est chargé après. */
+  :root[data-theme='glass'][data-mode] {
+    --surface: var(--surface-solid);
+    --surface-2: var(--surface-solid);
+  }
+
+  .card,
+  .app-header,
+  .dialog,
+  .menu-tile {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

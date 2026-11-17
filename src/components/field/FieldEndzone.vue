@@ -68,7 +68,7 @@ defineProps<{ side: 'left' | 'right'; team: string; ours: boolean; target: boole
 strong {
   font-family: var(--font-title);
   font-size: 1rem;
-  max-height: 60%;
+  max-height: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

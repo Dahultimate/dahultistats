@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ScoreBoard from '@/components/ui/ScoreBoard.vue'
+import ThemePicker from '@/components/ui/ThemePicker.vue'
 import { sortMatchesByDate } from '@/domain/filters'
 import { formatLongDate } from '@/domain/format'
 import { matchScore } from '@/domain/score'
@@ -100,6 +101,8 @@ async function openOtherFile(): Promise<void> {
         <button type="button" class="btn" @click="openOtherFile">{{ fr.home.openOther }}</button>
       </div>
     </section>
+
+    <ThemePicker />
   </div>
 </template>
 
