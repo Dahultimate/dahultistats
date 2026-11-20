@@ -2,6 +2,9 @@
 
 ## Non publié
 
+- Statistiques : affinités entre joueurs (passes, buts sur passe décisive et drops dans chaque
+  sens, points joués ensemble, différentiel) dans le rapport individuel, les statistiques globales
+  et la fiche joueur, exports compris.
 - Apparence : choix du thème (Classique ou Verre liquide), chacun en clair et en sombre ; le mode
   suit l’appareil et se bascule depuis le bandeau. Police Figtree auto-hébergée.
 

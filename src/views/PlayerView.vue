@@ -13,6 +13,7 @@ import { playerReportFileName } from '@/domain/export/fileName'
 import { eventNames, filterMatches, matchesPlayedBy, sortMatchesByDate } from '@/domain/filters'
 import { formatShortDate } from '@/domain/format'
 import { buildPlayerStats } from '@/domain/reports'
+import { computeAffinities, partnersOf } from '@/domain/stats/affinities'
 import { fr } from '@/i18n/fr'
 import { type PlayerInput, useDataStore } from '@/stores/dataStore'
 import { useFiltersStore } from '@/stores/filtersStore'
@@ -41,6 +42,9 @@ const played = computed(() =>
 )
 const selected = computed(() => filterMatches(played.value, filters.value))
 const stats = computed(() => buildPlayerStats(selected.value, String(route.params.id)))
+const partners = computed(() =>
+  partnersOf(computeAffinities(selected.value), String(route.params.id)),
+)
 const matchOptions = computed(() =>
   played.value.map((match) => ({
     id: match.id,
@@ -139,11 +143,23 @@ function describeExport() {
     <div class="row">
       <ExportButton @click="exportOpen = true" />
     </div>
-    <PlayerReport v-model:heatmap-key="heatmapKey" :stats="stats" mode="screen" />
+    <PlayerReport
+      v-model:heatmap-key="heatmapKey"
+      :stats="stats"
+      :partners="partners"
+      :find-player="dataStore.findPlayer"
+      mode="screen"
+    />
 
     <ExportDialog v-model:open="exportOpen" default-content="joueur" :describe="describeExport">
       <template #print>
-        <PlayerReport v-model:heatmap-key="heatmapKey" :stats="stats" mode="print" />
+        <PlayerReport
+          v-model:heatmap-key="heatmapKey"
+          :stats="stats"
+          :partners="partners"
+          :find-player="dataStore.findPlayer"
+          mode="print"
+        />
       </template>
     </ExportDialog>
   </div>

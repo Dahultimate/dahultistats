@@ -1,5 +1,6 @@
 // Données prêtes à afficher pour les rapports : les composants ne calculent rien eux-mêmes.
 
+import { computeAffinities, type PairAffinity } from './stats/affinities'
 import { computeStats, type PlayerStats, type Stats, type TeamStats } from './stats/computeStats'
 import { findLeaders, type Leaders } from './stats/leaders'
 import { type PossessionSummary, summarizePossessions } from './stats/possessions'
@@ -47,7 +48,11 @@ export interface MatchReport {
   essentials: Essentials
   duel: DuelRow[]
   tablePlayers: PlayerStats[]
+  affinities: PairAffinity[]
 }
+
+/** Duos affichés dans les rapports de match et les statistiques globales ; la fiche joueur les montre tous. */
+export const TOP_PAIRS = 10
 
 function share(part: number, total: number): number | null {
   return total > 0 ? part / total : null
@@ -112,17 +117,23 @@ export function buildMatchReport(match: Match): MatchReport {
     essentials: essentials(stats.team, possessions),
     duel: teamDuel(stats.team, possessions),
     tablePlayers: tablePlayers(stats),
+    affinities: computeAffinities([match]).slice(0, TOP_PAIRS),
   }
 }
 
 export interface GlobalReport {
   stats: Stats
   tablePlayers: PlayerStats[]
+  affinities: PairAffinity[]
 }
 
 export function buildGlobalReport(matches: readonly Match[]): GlobalReport {
   const stats = computeStats(matches)
-  return { stats, tablePlayers: tablePlayers(stats) }
+  return {
+    stats,
+    tablePlayers: tablePlayers(stats),
+    affinities: computeAffinities(matches).slice(0, TOP_PAIRS),
+  }
 }
 
 export function buildPlayerStats(matches: readonly Match[], playerId: string): PlayerStats {

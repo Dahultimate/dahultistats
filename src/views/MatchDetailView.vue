@@ -146,6 +146,7 @@ async function remove(): Promise<void> {
         <IndividualReport
           v-if="tab === 'individual'"
           :players="report.tablePlayers"
+          :affinities="report.affinities"
           :find-player="dataStore.findPlayer"
           mode="screen"
         />
@@ -175,6 +176,7 @@ async function remove(): Promise<void> {
         <IndividualReport
           v-if="content !== 'collectif'"
           :players="report.tablePlayers"
+          :affinities="report.affinities"
           :find-player="dataStore.findPlayer"
           mode="print"
         />

@@ -7,10 +7,11 @@ import HeatmapPicker from '@/components/field/HeatmapPicker.vue'
 import KpiTile from '@/components/ui/KpiTile.vue'
 import { CONCEDED_LABELS, RECOVERY_LABELS, TURN_CAUSE_LABELS } from '@/domain/constants'
 import { formatNumber, formatPercent } from '@/domain/format'
-import { causeItems, type GlobalReport } from '@/domain/reports'
+import { causeItems, type GlobalReport, TOP_PAIRS } from '@/domain/reports'
 import type { Player } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 
+import AffinityTable from './AffinityTable.vue'
 import PlayersTable from './PlayersTable.vue'
 import ReportSection from './ReportSection.vue'
 
@@ -113,6 +114,10 @@ const heatmaps = computed(() => {
     </ReportSection>
     <ReportSection :title="r.playersTable">
       <PlayersTable :rows="report.tablePlayers" :find-player="findPlayer" :mode="mode" />
+    </ReportSection>
+    <ReportSection :title="fr.affinity.title">
+      <p class="small muted">{{ fr.affinity.topHint(TOP_PAIRS) }}</p>
+      <AffinityTable :rows="report.affinities" :find-player="findPlayer" :mode="mode" />
     </ReportSection>
   </div>
 </template>

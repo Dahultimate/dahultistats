@@ -401,6 +401,25 @@ export const fr = {
       pulls: ['Pulls', 'Pulls lancés'],
     },
   },
+  affinity: {
+    title: 'Affinités entre joueurs',
+    topHint: (max: number) => `Les ${max} duos qui se font le plus de passes, au plus.`,
+    playerTitle: 'Affinités avec ses partenaires',
+    caption: 'Affinités entre joueurs',
+    duo: 'Duo',
+    partner: 'Partenaire',
+    columns: {
+      passes: 'Passes',
+      assists: 'Buts',
+      drops: 'Drops',
+      points: 'Pts',
+      differential: 'Diff.',
+    },
+    legend:
+      '→ du premier joueur vers le second, ← l’inverse. Buts : marqués par l’un sur une passe décisive de l’autre. Drops : passe de l’un lâchée par l’autre. Pts : points joués ensemble ; Diff. : points gagnés − perdus ensemble.',
+    playerLegend:
+      '→ de lui vers son partenaire, ← l’inverse. Buts : marqués par l’un sur une passe décisive de l’autre. Drops : passe de l’un lâchée par l’autre. Pts : points joués ensemble ; Diff. : points gagnés − perdus ensemble.',
+  },
   history: {
     empty: 'Aucun match pour l’instant.',
     result: { V: 'V', D: 'D', N: 'N', en_cours: 'En cours' },

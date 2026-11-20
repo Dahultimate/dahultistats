@@ -5,16 +5,19 @@ import { computed } from 'vue'
 import PassesByPlayer from '@/components/charts/PassesByPlayer.vue'
 import HeatmapField from '@/components/field/HeatmapField.vue'
 import { describeFailedPasses, playerLabel } from '@/domain/eventText'
-import { passersByAttempts } from '@/domain/reports'
+import { passersByAttempts, TOP_PAIRS } from '@/domain/reports'
+import type { PairAffinity } from '@/domain/stats/affinities'
 import type { PlayerStats } from '@/domain/stats/computeStats'
 import type { Player } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 
+import AffinityTable from './AffinityTable.vue'
 import PlayersTable from './PlayersTable.vue'
 import ReportSection from './ReportSection.vue'
 
 const props = defineProps<{
   players: PlayerStats[]
+  affinities: PairAffinity[]
   findPlayer: (id: string) => Player | undefined
   mode: 'screen' | 'print'
 }>()
@@ -35,6 +38,10 @@ const passers = computed(() =>
   <div class="report">
     <ReportSection :title="fr.reports.summaryTable">
       <PlayersTable :rows="players" :find-player="findPlayer" :mode="mode" />
+    </ReportSection>
+    <ReportSection :title="fr.affinity.title">
+      <p class="small muted">{{ fr.affinity.topHint(TOP_PAIRS) }}</p>
+      <AffinityTable :rows="affinities" :find-player="findPlayer" :mode="mode" />
     </ReportSection>
     <ReportSection :title="fr.reports.passesByPlayer">
       <PassesByPlayer :rows="passers" />

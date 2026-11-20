@@ -8,12 +8,20 @@ import KpiTile from '@/components/ui/KpiTile.vue'
 import { DEFENSIVE_FAULT_LABELS, TURN_CAUSE_LABELS } from '@/domain/constants'
 import { formatPercent, formatSigned } from '@/domain/format'
 import { causeItems } from '@/domain/reports'
+import type { PairAffinity } from '@/domain/stats/affinities'
 import type { PlayerStats } from '@/domain/stats/computeStats'
+import type { Player } from '@/domain/types'
 import { fr } from '@/i18n/fr'
 
+import AffinityTable from './AffinityTable.vue'
 import ReportSection from './ReportSection.vue'
 
-const props = defineProps<{ stats: PlayerStats; mode: 'screen' | 'print' }>()
+const props = defineProps<{
+  stats: PlayerStats
+  partners: PairAffinity[]
+  findPlayer: (id: string) => Player | undefined
+  mode: 'screen' | 'print'
+}>()
 const heatmapKey = defineModel<string>('heatmapKey', { required: true })
 
 const r = fr.reports
@@ -82,6 +90,9 @@ const heatmaps = computed(() => {
     </ReportSection>
     <ReportSection :title="mode === 'screen' ? r.fieldMap : undefined">
       <HeatmapPicker v-model="heatmapKey" :options="heatmaps" :mode="mode" />
+    </ReportSection>
+    <ReportSection :title="fr.affinity.playerTitle">
+      <AffinityTable :rows="partners" :find-player="findPlayer" :mode="mode" partners />
     </ReportSection>
   </div>
 </template>

@@ -135,6 +135,11 @@ La spécification laisse quelques points ouverts ; voici les choix retenus (les 
 - Le tableau des joueurs garde ses infobulles, et un dépliant « Explication des colonnes » donne
   les mêmes explications sur téléphone (aucune information n’est accessible seulement au survol).
 - Nos turns sont tracés en rouge (couleur des passes ratées), les buts encaissés en orange.
+- Affinités entre joueurs (rapport individuel d’un match, statistiques globales, fiche joueur) :
+  pour chaque duo, passes réussies, buts sur passe décisive et drops dans chaque sens, points joués
+  ensemble et différentiel. Un drop ne compte que si le porteur est connu ; une mauvaise passe ne
+  désigne pas de receveur, d’où l’absence de pourcentage de réussite par duo. Les duos sont triés
+  par passes, puis par buts, puis par différentiel ; match et statistiques globales en montrent 10.
 
 **Exports PDF / image**
 

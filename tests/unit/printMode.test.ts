@@ -8,6 +8,7 @@ import PlayerReport from '@/components/reports/PlayerReport.vue'
 import PointByPoint from '@/components/reports/PointByPoint.vue'
 import { buildGlobalReport, buildMatchReport, buildPlayerStats } from '@/domain/reports'
 import { createSampleData } from '@/domain/sampleData'
+import { computeAffinities, partnersOf } from '@/domain/stats/affinities'
 
 const data = createSampleData()
 const match = data.matchs[0]!
@@ -20,13 +21,22 @@ function mountReport(name: string, mode: 'screen' | 'print') {
     case 'CollectiveReport':
       return mount(CollectiveReport, { props: { match, report, findPlayer, mode } })
     case 'IndividualReport':
-      return mount(IndividualReport, { props: { players: report.tablePlayers, findPlayer, mode } })
+      return mount(IndividualReport, {
+        props: {
+          players: report.tablePlayers,
+          affinities: report.affinities,
+          findPlayer,
+          mode,
+        },
+      })
     case 'PointByPoint':
       return mount(PointByPoint, { props: { match, findPlayer, mode } })
     case 'PlayerReport':
       return mount(PlayerReport, {
         props: {
           stats: buildPlayerStats(data.matchs, data.joueurs[0]!.id),
+          partners: partnersOf(computeAffinities(data.matchs), data.joueurs[0]!.id),
+          findPlayer,
           mode,
           heatmapKey: 'throws',
         },
@@ -60,6 +70,13 @@ describe('rapports en mode print', () => {
       expect(mountReport(name, 'screen').findAll(INTERACTIVE).length).toBeGreaterThan(0)
     },
   )
+
+  it('les affinités entre joueurs figurent dans l’export', () => {
+    expect(mountReport('GlobalReport', 'print').text()).toContain('Affinités entre joueurs')
+    expect(
+      mountReport('PlayerReport', 'print').findAll('.affinity-table tbody tr').length,
+    ).toBeGreaterThan(0)
+  })
 
   it('la carte du terrain exportée précise la statistique choisie', () => {
     expect(mountReport('PlayerReport', 'print').text()).toContain(
