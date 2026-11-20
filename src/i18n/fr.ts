@@ -403,7 +403,7 @@ export const fr = {
   },
   affinity: {
     title: 'Affinités entre joueurs',
-    topHint: (max: number) => `Les ${max} duos qui se font le plus de passes, au plus.`,
+    topHint: (count: number) => `Les ${count} duos qui se font le plus de passes.`,
     playerTitle: 'Affinités avec ses partenaires',
     caption: 'Affinités entre joueurs',
     duo: 'Duo',

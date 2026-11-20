@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import PassesByPlayer from '@/components/charts/PassesByPlayer.vue'
 import HeatmapField from '@/components/field/HeatmapField.vue'
 import { describeFailedPasses, playerLabel } from '@/domain/eventText'
-import { passersByAttempts, TOP_PAIRS } from '@/domain/reports'
+import { passersByAttempts } from '@/domain/reports'
 import type { PairAffinity } from '@/domain/stats/affinities'
 import type { PlayerStats } from '@/domain/stats/computeStats'
 import type { Player } from '@/domain/types'
@@ -40,7 +40,9 @@ const passers = computed(() =>
       <PlayersTable :rows="players" :find-player="findPlayer" :mode="mode" />
     </ReportSection>
     <ReportSection :title="fr.affinity.title">
-      <p class="small muted">{{ fr.affinity.topHint(TOP_PAIRS) }}</p>
+      <p v-if="affinities.length > 1" class="small muted">
+        {{ fr.affinity.topHint(affinities.length) }}
+      </p>
       <AffinityTable :rows="affinities" :find-player="findPlayer" :mode="mode" />
     </ReportSection>
     <ReportSection :title="fr.reports.passesByPlayer">
