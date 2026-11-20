@@ -122,6 +122,10 @@ async function playDefensePoint(page: Page): Promise<void> {
   await button(page, 'Drop').click()
   await tapZone(page, 'M3-L', false)
   await button(page, 'Marquage individuel').click()
+  // Un but adverse ne se marque pas au milieu du terrain.
+  await tapZone(page, 'M2-C', false)
+  await expect(page.getByText('Un but adverse se marque dans notre en-but')).toBeVisible()
+  await expect(scoreboard(page)).toHaveAccessibleName('Open 1, Les Frelons 0')
   await button(page, 'Valider sans joueur fautif').click()
   await expect(page.getByRole('heading', { name: 'Point 3' })).toBeVisible()
   await expect(scoreboard(page)).toHaveAccessibleName('Open 1, Les Frelons 1')

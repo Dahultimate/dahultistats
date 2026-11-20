@@ -209,6 +209,9 @@ export const fr = {
     passHelp: 'Touchez l’endroit et le receveur, dans l’ordre que vous voulez.',
     goal: (team: string) => `BUT pour ${team} ! Qui a attrapé le disque ?`,
     goalHelp: 'Réception dans l’en-but adverse : passe décisive pour le lanceur.',
+    goalOutsideTheirEndzone:
+      'Un Callahan se marque dans l’en-but adverse : touchez l’en-but adverse.',
+    goalOutsideOurEndzone: 'Un but adverse se marque dans notre en-but : touchez notre en-but.',
     turn: 'TURN',
     turnCause: 'Cause du turn ?',
     turnCauseHelp: 'Choisissez ce qui a fait perdre le disque.',

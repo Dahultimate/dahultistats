@@ -2,6 +2,8 @@
 
 ## Non publié
 
+- Saisie : un but encaissé, un Callahan ou un Callahan subi ne peut plus être placé hors de l’en-but
+  concerné ; le toucher est refusé avec un message.
 - Statistiques : affinités entre joueurs (passes, buts sur passe décisive et drops dans chaque
   sens, points joués ensemble, différentiel) dans le rapport individuel, les statistiques globales
   et la fiche joueur, exports compris.

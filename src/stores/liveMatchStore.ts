@@ -4,7 +4,7 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, type Ref, ref } from 'vue'
 
-import { CARRIER_FAULT_CAUSES } from '@/domain/constants'
+import { CARRIER_FAULT_CAUSES, isConcededCause } from '@/domain/constants'
 import { describeEvent, playerLabel } from '@/domain/eventText'
 import { currentPoint, lastPuller } from '@/domain/lineup'
 import {
@@ -23,9 +23,11 @@ import type {
   Side,
   TurnCause,
 } from '@/domain/types'
-import { isOpponentEndzone } from '@/domain/zones'
+import { inScoringEndzone, isOpponentEndzone } from '@/domain/zones'
+import { fr } from '@/i18n/fr'
 
 import { useDataStore } from './dataStore'
+import { useUiStore } from './uiStore'
 
 export type LiveStep =
   | 'none'
@@ -219,8 +221,18 @@ interface LiveContext {
   recordEvent: (event: NewEvent) => void
 }
 
+/** Équipe qui marque si l'endroit touché valide l'action en cours ; null si ce n'est pas un but. */
+function pendingGoal(step: LiveStep, draft: Draft): Side | null {
+  if (step === 'turnDetails' && draft.turnCause === 'callahan') return 'eux'
+  if (step !== 'defenseDetails' || !draft.defCause) return null
+  if (draft.defCause === 'callahan') return 'nous'
+  return isConcededCause(draft.defCause) ? 'eux' : null
+}
+
 /** Touches du coach : règle d'ordre libre (endroit et joueur dans n'importe quel ordre). */
 function useLiveInput(draft: Draft, live: LiveContext) {
+  const ui = useUiStore()
+
   function tryRecordPull(): void {
     if (draft.spot === null) return
     const landing = draft.spot === 'brick' ? { brick: true } : { position: draft.spot }
@@ -255,6 +267,11 @@ function useLiveInput(draft: Draft, live: LiveContext) {
     if (step === 'pass') {
       draft.spot = spot
       return tryRecordPass()
+    }
+    const scorer = pendingGoal(step, draft)
+    if (scorer && !inScoringEndzone(scorer, spot)) {
+      ui.toast(scorer === 'nous' ? fr.live.goalOutsideTheirEndzone : fr.live.goalOutsideOurEndzone)
+      return
     }
     const joueurs = [...draft.players]
     if (step === 'turnDetails' && draft.turnCause) {

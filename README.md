@@ -123,6 +123,9 @@ La spécification laisse quelques points ouverts ; voici les choix retenus (les 
 - Dans le journal, un pull de notre équipe sorti du terrain s’écrit « Pull de #12 Sarah → Brick » ;
   un break sans but s’écrit sans préfixe (« Break (sans but) · #5 Inès »).
 - Un numéro déjà porté par un joueur actif est signalé dans le message de confirmation, sans bloquer.
+- Un but ne se saisit que dans le bon en-but : nos buts et nos Callahans dans l’en-but adverse,
+  les buts encaissés et les Callahans subis dans notre en-but. Un toucher ailleurs est refusé avec un
+  message. « Valider sans endroit » reste possible quand le coach ne sait pas où le but a été marqué.
 
 **Statistiques**
 

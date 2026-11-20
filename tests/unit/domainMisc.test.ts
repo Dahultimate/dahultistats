@@ -30,6 +30,7 @@ import {
 } from '@/domain/lineup'
 import type { MatchEvent, Player } from '@/domain/types'
 import {
+  inScoringEndzone,
   isOpponentEndzone,
   isZoneId,
   positionName,
@@ -71,6 +72,20 @@ describe('zones', () => {
     expect(isOpponentEndzone(null)).toBe(false)
     expect(isZoneId('M2-C')).toBe(true)
     expect(isZoneId('brick')).toBe(false)
+  })
+
+  it('un but ne se marque que dans l’en-but de l’équipe qui défend', () => {
+    const ourEndzone = { x: 0.1, y: 0.5 }
+    const midfield = { x: 0.5, y: 0.5 }
+    const theirEndzone = { x: 0.9, y: 0.5 }
+    expect(inScoringEndzone('nous', theirEndzone)).toBe(true)
+    expect(inScoringEndzone('nous', midfield)).toBe(false)
+    expect(inScoringEndzone('nous', ourEndzone)).toBe(false)
+    expect(inScoringEndzone('eux', ourEndzone)).toBe(true)
+    expect(inScoringEndzone('eux', midfield)).toBe(false)
+    expect(inScoringEndzone('eux', theirEndzone)).toBe(false)
+    // La ligne d’en-but appartient au terrain (comme zoneAt).
+    expect(inScoringEndzone('eux', { x: 1 / 5.6, y: 0.5 })).toBe(false)
   })
 })
 

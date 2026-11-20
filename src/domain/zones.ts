@@ -2,7 +2,7 @@
 // (« Milieu droite »), à reconnaître l'en-but adverse et à relire les anciens fichiers.
 // Les positions sont toujours exprimées dans le sens de NOTRE attaque.
 
-import type { FieldPosition, Lane, Rank, ZoneId } from './types'
+import type { FieldPosition, Lane, Rank, Side, ZoneId } from './types'
 
 export const RANKS: Rank[] = ['D', 'M1', 'M2', 'M3', 'A']
 export const LANES: Lane[] = ['L', 'C', 'R']
@@ -69,6 +69,11 @@ export function zoneAt(position: FieldPosition): ZoneId {
 
 export function isOpponentEndzone(position: FieldPosition | null | undefined): boolean {
   return !!position && position.x >= 1 - ENDZONE_DEPTH
+}
+
+/** Un but se marque dans l'en-but adverse pour nous, dans notre en-but pour l'adversaire. */
+export function inScoringEndzone(scorer: Side, position: FieldPosition): boolean {
+  return scorer === 'nous' ? isOpponentEndzone(position) : position.x < ENDZONE_DEPTH
 }
 
 export function zoneName(zone: ZoneId): string {
